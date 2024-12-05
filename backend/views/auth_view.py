@@ -6,6 +6,9 @@ import base64
 from utils import get_db_connection  # Assuming your connection class is in db_connection.py
 from flask_cors import cross_origin
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
+
 auth_bp = Blueprint('auth_bp', __name__)
 
 def hash_password(password):
@@ -31,7 +34,8 @@ def register():
     lname = user_data['lname']
     email = user_data['email']
 
-    hashed_password = hash_password(password)
+    # hashed_password = hash_password(password)
+    hashed_password = generate_password_hash(password)
 
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -61,7 +65,8 @@ def login():
     cursor.execute("SELECT * FROM Person WHERE userName = %s", (userName,))
     user = cursor.fetchone()
 
-    if user and check_password(user[1].encode('utf-8'), password):
+    # if user and check_password(user[1].encode('utf-8'), password):
+    if user and check_password_hash(user[1], password):
         session['userName'] = user[0]  # Store username in session
         session['fname'] = user[2]
         session['lname'] = user[3]

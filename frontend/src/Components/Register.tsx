@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import { Form, Input, Button, notification } from "antd";
 import axios from "axios";
 import config from "../config"; // Import the config file
+import { useNavigate } from "react-router-dom";
+
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleRegister = async (values: any) => {
     setLoading(true);
+    
     try {
       const response = await axios.post(`${config.apiUrl}/register`, {
         userName: values.userName,
@@ -20,6 +24,7 @@ const Register = () => {
         message: "Registration Success",
         description: response.data.message,
       });
+      navigate("/login");
     } catch (error: any) {
       notification.error({
         message: "Registration Failed",
