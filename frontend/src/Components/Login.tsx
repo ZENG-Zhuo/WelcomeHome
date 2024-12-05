@@ -3,8 +3,11 @@ import { Form, Input, Button, notification } from "antd";
 import axios from "axios";
 import config from "../config"; // Import the config file
 
+import { useNavigate } from "react-router-dom";
+
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async (values: any) => {
     setLoading(true);
@@ -17,6 +20,8 @@ const Login = () => {
         message: "Login Success",
         description: response.data.message,
       });
+      const userRole = response.data.userRole; // 获取后端返回的 userRole
+      navigate("/dashboard", { state: { userRole } }); 
     } catch (error: any) {
       notification.error({
         message: "Login Failed",
