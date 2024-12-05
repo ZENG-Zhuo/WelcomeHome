@@ -1,26 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom"; // Import necessary components from react-router-dom
+import Login from "./Components/Login";
+import Register from "./Components/Register";
+import { Layout, Button, Divider } from "antd";
+import FindItemLocations from "./Components/FindItem";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <BrowserRouter>
+      <Layout style={{ height: "100vh" }}>
+        <Layout.Content
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/findItem" element={<FindItemLocations />} />
+            <Route
+              path="/"
+              element={
+                <div style={{ width: 400, margin: "auto", paddingTop: "50px" }}>
+                  <h2>Welcome</h2>
+                  <Button type="primary" block href="/login">
+                    Login
+                  </Button>
+                  <Divider>Or</Divider>
+                  <Button type="primary" block href="/register">
+                    Register
+                  </Button>
+                </div>
+              }
+            />
+          </Routes>
+        </Layout.Content>
+      </Layout>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;
