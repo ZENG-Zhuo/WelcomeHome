@@ -1,14 +1,19 @@
-// src/components/FindOrderItems.tsx
-
 import React, { useState } from "react";
 import { Form, Input, Button, List, Typography, message } from "antd";
 import axios from "axios";
+import config from "../config";
 
 const { Title } = Typography;
 
 // Define interfaces for the piece and item locations
 interface Piece {
   pieceNum: number;
+  description: string; // Add description
+  dimensions: {
+    length: number;
+    width: number;
+    height: number;
+  };
   location: string;
 }
 
@@ -27,7 +32,7 @@ const FindOrderItems: React.FC = () => {
 
   const handleSubmit = async (values: any) => {
     try {
-      const response = await axios.post("/find_order_items", {
+      const response = await axios.post(`${config.apiUrl}/find_order_items`, {
         orderID: values.orderID,
       });
       setItemLocations(response.data);
@@ -77,7 +82,11 @@ const FindOrderItems: React.FC = () => {
                 dataSource={item.pieces}
                 renderItem={(piece) => (
                   <List.Item>
-                    Piece {piece.pieceNum}: {piece.location}
+                    <div>
+                      Piece {piece.pieceNum}: {piece.location} <br />
+                      Description: {piece.description} <br />
+                      Dimensions: {piece.dimensions.length} x {piece.dimensions.width} x {piece.dimensions.height}
+                    </div>
                   </List.Item>
                 )}
               />

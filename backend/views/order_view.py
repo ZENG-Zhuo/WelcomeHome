@@ -36,9 +36,18 @@ def find_order_items():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
 
-    # Query to find items in the specified order
+    # Query to find items in the specified order with additional piece information
     query = """
-    SELECT i.ItemID, i.iDescription, p.pieceNum, l.roomNum, l.shelfNum
+    SELECT 
+        i.ItemID, 
+        i.iDescription, 
+        p.pieceNum, 
+        p.pDescription, 
+        p.length, 
+        p.width, 
+        p.height, 
+        l.roomNum, 
+        l.shelfNum
     FROM Item i
     JOIN ItemIn ii ON i.ItemID = ii.ItemID
     JOIN Ordered o ON ii.orderID = o.orderID
@@ -66,6 +75,12 @@ def find_order_items():
             }
         item_locations[item_id]['pieces'].append({
             'pieceNum': item['pieceNum'],
+            'description': item['pDescription'],
+            'dimensions': {
+                'length': item['length'],
+                'width': item['width'],
+                'height': item['height']
+            },
             'location': f"Room: {item['roomNum']}, Shelf: {item['shelfNum']}"
         })
 
