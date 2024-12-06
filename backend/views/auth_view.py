@@ -24,6 +24,26 @@ def check_password(stored_encoded_password, provided_password):
     hashed_provided_password = hashlib.sha256(salted_provided_password).hexdigest()
     return stored_password[16:] == hashed_provided_password.encode('utf-8')
 
+@auth_bp.route('/roles', methods=['POST'])
+@cross_origin()
+def get_roles():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("SELECT roleID, rDescription FROM Role")
+        roles = cursor.fetchall()
+
+        # Prepare the response
+        roles_list = [{'roleID': role[0], 'description': role[1]} for role in roles]
+
+        return jsonify(roles_list), 200
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
 @auth_bp.route('/register', methods=['POST'])
 @cross_origin()
 def register():
@@ -33,20 +53,32 @@ def register():
     fname = user_data['fname']
     lname = user_data['lname']
     email = user_data['email']
+    phones = user_data.get('phones', [])  # Expecting a list of phone numbers
+    role_id = user_data.get('roleID')  # Expecting a role ID
 
-    # hashed_password = hash_password(password)
+    # Hash the password
     hashed_password = generate_password_hash(password)
 
     connection = get_db_connection()
     cursor = connection.cursor()
 
     try:
-        print(f"Hashed Password {hashed_password}")
+        # Insert user into Person table
         cursor.execute("INSERT INTO Person (userName, password, fname, lname, email) VALUES (%s, %s, %s, %s, %s)",
                        (userName, hashed_password, fname, lname, email))
+        
+        # Insert phone numbers into PersonPhone table
+        for phone in phones:
+            cursor.execute("INSERT INTO PersonPhone (userName, phone) VALUES (%s, %s)", (userName, phone))
+        
+        # Insert role into Act table
+        if role_id:
+            cursor.execute("INSERT INTO Act (userName, roleID) VALUES (%s, %s)", (userName, role_id))
+
         connection.commit()
         return jsonify({"message": "User registered successfully"}), 201
     except mysql.connector.Error as err:
+        connection.rollback()  # Rollback in case of error
         return jsonify({"error": str(err)}), 400
     finally:
         cursor.close()

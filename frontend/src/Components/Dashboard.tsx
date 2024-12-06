@@ -14,7 +14,7 @@ const Dashboard: React.FC = () => {
 
   const generalFeatures: Feature[] = [
     { label: "Find Single Item", path: "/findItem" },
-    { label: "Find Order Items", path: "/findOrderItems" },
+    { label: "Find Order Items", path: "/findOrder" },
     { label: "Rank System", path: "/rankSystem" },
     { label: "User's Tasks", path: "/userTasks" },
   ];

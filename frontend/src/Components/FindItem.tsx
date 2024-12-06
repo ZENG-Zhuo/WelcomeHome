@@ -31,7 +31,7 @@ const FindItemLocations: React.FC = () => {
       });
       return;
     }
-
+    setLocations([]);
     setLoading(true);
     try {
       const response = await axios.post<ItemLocationResponse>(
@@ -40,7 +40,19 @@ const FindItemLocations: React.FC = () => {
       );
 
       if (response.data.locations.length > 0) {
-        setLocations(response.data.locations);
+        setLocations(response.data.locations.map((arr: any) => {
+          if (Array.isArray(arr) && arr.length === 2) {
+            const [roomNum, shelfNum] = arr;
+        
+            // Validate that both roomNum and shelfNum are numbers
+            if (typeof roomNum === 'number' && typeof shelfNum === 'number') {
+              return { roomNum, shelfNum };
+            }
+          }
+          // Return default location if validation fails
+          return { roomNum: 0, shelfNum: 0 };
+        }));
+        console.log(locations);
       } else {
         notification.info({
           message: "No pieces found",
@@ -105,7 +117,7 @@ const FindItemLocations: React.FC = () => {
       ) : (
         <Table
           columns={columns}
-          dataSource={locations}
+          dataSource={locations?locations:locations}
           rowKey={(record, index) =>
             `${record.roomNum}-${record.shelfNum}-${index}`
           }

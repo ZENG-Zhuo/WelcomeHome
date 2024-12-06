@@ -5,7 +5,7 @@ import Register from "./Components/Register";
 import { Layout, Button, Divider } from "antd";
 import FindItemLocations from "./Components/FindItem";
 import Dashboard from "./Components/Dashboard";
-
+import FindOrderItems from "./Components/FindOrder";
 
 const App = () => {
   return (
@@ -22,7 +22,8 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/findItem" element={<FindItemLocations />} />
-            <Route path="/dashboard" element={<Dashboard/>} />
+            <Route path="/findOrder" element={<FindOrderItems />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route
               path="/"
               element={
