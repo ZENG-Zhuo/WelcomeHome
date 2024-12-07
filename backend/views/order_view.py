@@ -174,3 +174,119 @@ def find_order_items():
         })
 
     return jsonify(item_locations), 200
+
+
+@order_bp.route('/orders/search', methods=['GET'])
+def search_orders():
+    order_number = request.args.get('order_number')
+    client_username = request.args.get('client_username')
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    if order_number:
+        cursor.execute("SELECT * FROM Ordered WHERE orderID = %s", (order_number,))
+    elif client_username:
+        cursor.execute("SELECT * FROM Ordered WHERE client = %s", (client_username,))
+    else:
+        return jsonify({"error": "Please provide either order_number or client_username."}), 400
+    
+    orders = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return jsonify(orders)
+
+
+@order_bp.route('/orders/update_location', methods=['POST'])
+@staff_required
+def update_item_location():
+    data = request.get_json()
+    order_id = data.get('orderID')
+
+    if not order_id:
+        return jsonify({"error": "orderID is required."}), 400
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Update the location of all pieces associated with the order to (-1, -1)
+        cursor.execute("""
+            UPDATE Piece 
+            SET roomNum = -1, shelfNum = -1
+            WHERE ItemID IN (
+                SELECT ItemID FROM ItemIn WHERE orderID = %s
+            )
+        """, (order_id,))
+
+        # cursor.execute("""
+        #     UPDATE Ordered
+        #     SET orderNotes = 'Ready for Delivery'
+        #     WHERE orderID = %s
+        # """, (order_id,))
+
+        connection.commit()
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": f"Failed to update item locations: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Item locations updated to (-1, -1) and order marked as ready for delivery."}), 200
+
+
+@order_bp.route('/user/orders', methods=['GET'])
+@login_required
+def get_user_orders():
+    user_name = session['userName']
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Query to get orders where the current user is a client
+        cursor.execute("""
+            SELECT o.orderID, o.orderDate, o.orderNotes, o.supervisor, d.username as deliverer, d.status, d.date
+            FROM Ordered o
+            left JOIN Delivered d on d.orderID = o.orderID
+            WHERE o.client = %s
+        """, (user_name,))
+        
+        client_orders = cursor.fetchall()
+
+        # Query to get orders where the current user is a supervisor
+        cursor.execute("""
+            SELECT o.orderID, o.orderDate, o.orderNotes, o.supervisor, d.username as deliverer, d.status, d.date
+            FROM Ordered o
+            left JOIN Delivered d on d.orderID = o.orderID
+            WHERE o.supervisor = %s
+        """, (user_name,))
+        
+        supervised_orders = cursor.fetchall()
+
+        # Query to get delivered orders with order date and notes
+        cursor.execute("""
+            SELECT o.orderID, o.orderDate, o.orderNotes, o.supervisor, d.username as deliverer, d.status, d.date
+            FROM Delivered d
+            NATURAL JOIN Ordered o
+            WHERE d.userName = %s
+        """, (user_name,))
+        
+        delivered_orders = cursor.fetchall()
+
+        # Combine all results
+        orders = {
+            "client_orders": client_orders,
+            "supervised_orders": supervised_orders,
+            "delivered_orders": delivered_orders
+        }
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to retrieve user's orders: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify(orders), 200

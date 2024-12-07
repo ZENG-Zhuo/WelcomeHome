@@ -4,6 +4,7 @@ from config import db_config
 
 class DatabaseConnection:
     _instance = None
+    connection = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -16,7 +17,8 @@ class DatabaseConnection:
         return cls._instance
 
     def get_connection(self):
-        if self._instance is None or not self._instance.connection.is_connected():
+        if self._instance is None or self._instance.connection is None or \
+            not self._instance.connection.is_connected():
             print("Re-establishing the connection...")
             self._instance.connection = mysql.connector.connect(**db_config)
         return self._instance.connection

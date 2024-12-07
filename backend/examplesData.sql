@@ -63,6 +63,9 @@ INSERT IGNORE INTO Location (roomNum, shelfNum, shelf, shelfDescription) VALUES
 (2, 1, 'C', 'Clothing shelf'),
 (2, 2, 'D', 'Electronics shelf');
 
+INSERT INTO Location (roomNum, shelfNum, shelf, shelfDescription) VALUES
+(-1, -1, 'Z', 'Holding location for items in preparation');
+
 -- Insert Pieces
 INSERT IGNORE INTO Piece (ItemID, pieceNum, pDescription, length, width, height, roomNum, shelfNum, pNotes) VALUES
 (1, 1, 'Legs of the chair', 30, 30, 100, 1, 1, 'Solid wood legs'),
