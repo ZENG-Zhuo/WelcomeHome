@@ -43,7 +43,7 @@ INSERT INTO DonatedBy (ItemID, userName, donateDate) VALUES
 INSERT INTO Role (roleID, rDescription) VALUES
 ('admin', 'Administrator'),
 ('volunteer', 'Volunteer'),
-('manager', 'Manager'),
+('cilent', 'Client'),
 ('staff', 'Staff'),
 ('donor', 'Donor');  -- Added donor role
 
@@ -51,7 +51,7 @@ INSERT INTO Role (roleID, rDescription) VALUES
 INSERT INTO Act (userName, roleID) VALUES
 ('jdoe', 'admin'),
 ('asmith', 'volunteer'),
-('bwhite', 'manager'),
+('bwhite', 'cilent'),
 ('cklein', 'staff'),
 ('jdoe', 'donor'),  -- Assigning donor role to John Doe
 ('asmith', 'donor'); -- Assigning donor role to Alice Smith

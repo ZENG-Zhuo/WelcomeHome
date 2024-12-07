@@ -7,6 +7,9 @@ import FindItemLocations from "./Components/FindItem";
 import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
 import DonationForm from "./Components/DonationForm";
+import StartOrder from "./Components/StartOrder";
+import ProtectedRoute from "./Components/ProtectedRoute";
+
 import axios from "axios";
 
 const App = () => {
@@ -24,10 +27,11 @@ const App = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/findItem" element={<FindItemLocations />} />
-            <Route path="/findOrder" element={<FindOrderItems />} />
-            <Route path="/donateForm" element={<DonationForm />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/findItem" element={<ProtectedRoute element={<FindItemLocations />} />} />
+            <Route path="/findOrder" element={<ProtectedRoute element={<FindOrderItems />} />} />
+            <Route path="/donateForm" element={<ProtectedRoute element={<DonationForm />} />} />
+            <Route path="/startOrder" element={<ProtectedRoute element={<StartOrder />} />} />
+            <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
             <Route
               path="/"
               element={

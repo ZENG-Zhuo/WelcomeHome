@@ -12,15 +12,39 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 auth_bp = Blueprint('auth_bp', __name__)
 
-
+# Decorators    
 def staff_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Check if 'roles' exist in session and if 'staff' is in the roles
-        if 'roles' not in session or 'staff' not in session['roles']:
+        if 'roles' not in session:
+            return jsonify({"error": "Not login in. Please login first."}), 401
+        if 'staff' not in session['roles']:
             return jsonify({"error": "Access denied. Staff only."}), 403
         return f(*args, **kwargs)
     return decorated_function
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        print(session)
+        if 'userName' not in session:
+            return jsonify({"error": "Please login first"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Protected routes
+@auth_bp.route('/check_role', methods=['GET'])
+@staff_required
+def check_role():
+    return jsonify({"message": "Welcome, staff!"}), 200
+
+@auth_bp.route('/check_login', methods=['GET'])
+@login_required
+def check_login():
+    print(session)
+    return jsonify({"message": "Logged"}), 200
+
 
 @auth_bp.route('/roles', methods=['POST'])
 def get_roles():
@@ -112,15 +136,19 @@ def login():
         # Store roles in session
         session['roles'] = [role[0] for role in roles]  # Assuming roleID is the first column
 
-        print(session['userName'])
-        print('userName' in session)
-        print(session['roles'])
-        print(session)
+        # print(session['userName'])
+        # print('userName' in session)
+        # print(session['roles'])
+        print("login:",session)
         session.modified = True
         return jsonify({"message": "Login success!"}), 200
     else:
         return jsonify({"error": "Invalid username or password"}), 401
     
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logout successful!"}), 200
 
 @auth_bp.route('/protected', methods=['GET'])
 def protected_resource(): # test protected
