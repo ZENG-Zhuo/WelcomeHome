@@ -1,16 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/Dashboard.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import config from "../config";
+import { notification, Spin } from "antd";
 
 type Feature = {
   label: string;
-  path: string; // 添加路径字段
+  path: string;
 };
 
 const Dashboard: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const userRole = location.state?.userRole || "Staff"; // Staff for test!
+  const [roles, setRoles] = useState<string[]>([]); 
+  const [fname, setFname] = useState<string>("");
+
+  // Control flag: Set to true to enable role-based features
+  const ENABLE_ROLE_BASED_FEATURES = false; 
+
+  const fetchUserData = async () => {
+    try {
+      const response = await axios.get(`${config.apiUrl}/user`, { withCredentials: true });
+      setRoles(response.data.roles);
+      setFname(response.data.fname);
+    } catch (error: any) {
+      notification.error({
+        message: "Error Fetching User Data",
+        description: error.response?.data?.error || "An error occurred while fetching user data.",
+      });
+      navigate("/"); 
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${config.apiUrl}/logout`, {}, { withCredentials: true });
+      navigate("/"); 
+    } catch (error) {
+      notification.error({
+        message: "Logout Failed",
+        description: "An error occurred while logging out.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   const generalFeatures: Feature[] = [
     { label: "Find Single Item", path: "/findItem" },
@@ -30,15 +66,25 @@ const Dashboard: React.FC = () => {
   ];
 
   const handleFeatureClick = (path: string) => {
-    navigate(path); // 跳转到对应路径
+    navigate(path);
   };
+
+  const hasRole = (role: string) => roles.includes(role.toLowerCase());
 
   return (
     <div className="dashboard">
       <header className="header">
         <h1>WelcomeHome Management Dashboard</h1>
+        
+        <div className="user-info">
+          <p id="user-fname">Hello, <span>{fname}</span>!</p>
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+
         <p id="user-role">
-          Logged in as: <span id="role-display">{userRole}</span>
+          Logged in as: <span id="role-display">{roles.join(", ")}</span>
         </p>
       </header>
 
@@ -58,7 +104,7 @@ const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        {(userRole === "Volunteer" || userRole === "Staff") && (
+        {(ENABLE_ROLE_BASED_FEATURES ? (hasRole("volunteer") || hasRole("staff")) : true) && (
           <section className="feature-section">
             <h2>Volunteer & Staff Features</h2>
             <div className="feature-grid">
@@ -75,7 +121,7 @@ const Dashboard: React.FC = () => {
           </section>
         )}
 
-        {userRole === "Staff" && (
+        {(ENABLE_ROLE_BASED_FEATURES ? hasRole("staff") : true) && (
           <section className="feature-section">
             <h2>Staff Exclusive Features</h2>
             <div className="feature-grid">

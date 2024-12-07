@@ -1,11 +1,7 @@
 from functools import wraps
 from flask import Blueprint, request, jsonify, session, redirect, url_for, flash
 import mysql.connector
-import hashlib
-import os
-import base64
 from utils import get_db_connection  # Assuming your connection class is in db_connection.py
-from flask_cors import cross_origin
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -34,15 +30,21 @@ def login_required(f):
     return decorated_function
 
 # Protected routes
-@auth_bp.route('/check_role', methods=['GET'])
-@staff_required
+@auth_bp.route('/check_role', methods=['POST'])
 def check_role():
-    return jsonify({"message": "Welcome, staff!"}), 200
+    if 'roles' not in session:
+        return jsonify({"error": "Not login in. Please login first."}), 401
+    
+    roles = request.json.get('roles')
+    has_common_role = bool(set(roles) & set(session['roles']))
+    if has_common_role:
+        return jsonify({"message": "Access granted"}), 200
+    return jsonify({"error": "Your roles are unauthorized to this page."}), 403
 
 @auth_bp.route('/check_login', methods=['GET'])
 @login_required
 def check_login():
-    print(session)
+    # print(session)
     return jsonify({"message": "Logged"}), 200
 
 
@@ -144,7 +146,13 @@ def login():
         return jsonify({"message": "Login success!"}), 200
     else:
         return jsonify({"error": "Invalid username or password"}), 401
-    
+
+@auth_bp.route('/user', methods=['GET'])
+def get_user():
+    if 'userName' in session:
+        return jsonify({"userName": session['userName'], "fname": session['fname'], "lname": session['lname'], "roles": session['roles']})
+    return jsonify({"error": "Please login first"}), 401
+
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     session.clear()

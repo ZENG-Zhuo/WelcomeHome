@@ -8,7 +8,9 @@ import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
 import DonationForm from "./Components/DonationForm";
 import StartOrder from "./Components/StartOrder";
+
 import ProtectedRoute from "./Components/ProtectedRoute";
+import RoleRoute from "./Components/RoleRoute";
 
 import axios from "axios";
 
@@ -30,7 +32,7 @@ const App = () => {
             <Route path="/findItem" element={<ProtectedRoute element={<FindItemLocations />} />} />
             <Route path="/findOrder" element={<ProtectedRoute element={<FindOrderItems />} />} />
             <Route path="/donateForm" element={<ProtectedRoute element={<DonationForm />} />} />
-            <Route path="/startOrder" element={<ProtectedRoute element={<StartOrder />} />} />
+            <Route path="/startOrder" element={<ProtectedRoute element={<RoleRoute element={<StartOrder />} requiredRoles={["staff"]} />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
             <Route
               path="/"
