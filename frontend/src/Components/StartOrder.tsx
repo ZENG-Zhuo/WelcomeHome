@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Form, Input, Button, notification, Spin } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Button, notification } from "antd";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import config from "../config";
@@ -10,32 +10,10 @@ interface StartOrderResponse {
 
 const StartOrder: React.FC = () => {
   const [clientUsername, setClientUsername] = useState("");
+  const [orderNotes, setOrderNotes] = useState<string | undefined>(undefined);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const navigate = useNavigate();
-
-  const notificationShown = useRef(false); // Avoid showing multiple notifications
-  useEffect(() => {
-    const checkUserRole = async () => {
-      try {
-        await axios.get(`${config.apiUrl}/check_role`, { withCredentials: true });
-        setIsAuthorized(true);
-      } catch (error: any) {
-        setIsAuthorized(false);
-        // Show notification only once
-        if (!notificationShown.current) {
-          notification.error({
-            message: "Authentication failed.",
-            description: error.response?.data?.error || "Unable to verify user role.",
-          });
-          notificationShown.current = true;
-        }
-      }
-    };
-
-    checkUserRole();
-  }, []);
 
   const handleStartOrder = async () => {
     if (!clientUsername.trim()) {
@@ -50,7 +28,7 @@ const StartOrder: React.FC = () => {
     try {
       const { data } = await axios.post<StartOrderResponse>(
         `${config.apiUrl}/createOrder`,
-        { username: clientUsername },
+        { username: clientUsername, notes: orderNotes },
         { withCredentials: true }
       );
       setOrderId(data.orderID);
@@ -58,6 +36,9 @@ const StartOrder: React.FC = () => {
         message: "Order Created", 
         description: `Order ID: ${data.orderID}` 
       });
+
+      await axios.post(`${config.apiUrl}/orderInfo`, {orderID: data.orderID}, {withCredentials: true}); // test
+      
     } catch (error: any) {
       notification.error({
         message: "Order Creation Failed",
@@ -67,31 +48,6 @@ const StartOrder: React.FC = () => {
       setLoading(false);
     }
   };
-
-
-  if (isAuthorized === null) {
-    return (
-      <Spin 
-        size="large" 
-        style={{ 
-          display: "flex", 
-          justifyContent: "center", 
-          alignItems: "center", 
-          height: "100vh" 
-        }} 
-      />
-    );
-  }
-
-  // 未授权处理
-  if (!isAuthorized) {
-    return (
-      <div style={{ textAlign: "center", padding: 20 }}>
-        <h2>Unauthorized Access</h2>
-        <p>You do not have permission to access this page.</p>
-      </div>
-    );
-  }
 
   return (
     <div style={{ padding: 20 }}>
@@ -103,6 +59,13 @@ const StartOrder: React.FC = () => {
               value={clientUsername}
               onChange={(e) => setClientUsername(e.target.value)}
               placeholder="Enter Client Username"
+            />
+          </Form.Item>
+          <Form.Item label="Order Notes (Optional)">
+            <Input.TextArea
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
+              placeholder="Add any additional notes for the order"
             />
           </Form.Item>
           <Form.Item>

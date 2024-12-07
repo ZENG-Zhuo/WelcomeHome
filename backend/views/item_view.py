@@ -1,23 +1,41 @@
 # views/item_views.py
 from flask import Blueprint, request, jsonify, session
 from utils import get_db_connection
+from .auth_view import login_required
 
 item_bp = Blueprint('item_bp', __name__)
 
+@login_required
 @item_bp.route('/items', methods=['GET'])
 def get_items():
-    print("Get items request:")
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    print("Connection established:")
-    cursor.execute("SELECT * FROM Item")
-    items = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    print("Get items:")
-    print(items)
-    return jsonify(items)
+    main_category = request.args.get('mainCategory')
+    sub_category = request.args.get('subCategory')
+    conditions = ["mainCategory = %s"]
+    params = [main_category]
 
+    if sub_category: # If subCategory is provided
+        conditions.append("subCategory = %s")
+        params.append(sub_category)
+    try:
+        with get_db_connection().cursor() as cursor:
+            sql = f"""
+                SELECT ItemID, iDescription, photo, color, isNew, material
+                FROM Item
+                WHERE {' AND '.join(conditions)} 
+                AND ItemID NOT IN (SELECT ItemID FROM ItemIn)
+            """
+            cursor.execute(sql, params)
+            data = cursor.fetchall()
+            columns = [col[0] for col in cursor.description]
+        
+        items = [dict(zip(columns, row)) for row in data]
+        print(items)
+        return jsonify(items), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@login_required
 @item_bp.route('/create_items', methods=['POST'])
 def create_item():
     new_item = request.get_json()
@@ -30,7 +48,7 @@ def create_item():
     connection.close()
     return jsonify(new_item), 201
 
-
+@login_required
 @item_bp.route('/find_item_locations', methods=['POST'])
 def find_item_locations():
     print(session)

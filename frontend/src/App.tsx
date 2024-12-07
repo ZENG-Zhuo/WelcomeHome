@@ -8,6 +8,7 @@ import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
 import DonationForm from "./Components/DonationForm";
 import StartOrder from "./Components/StartOrder";
+import ShopPage from "./Components/ShopPage";
 
 import ProtectedRoute from "./Components/ProtectedRoute";
 import RoleRoute from "./Components/RoleRoute";
@@ -33,6 +34,7 @@ const App = () => {
             <Route path="/findOrder" element={<ProtectedRoute element={<FindOrderItems />} />} />
             <Route path="/donateForm" element={<ProtectedRoute element={<DonationForm />} />} />
             <Route path="/startOrder" element={<ProtectedRoute element={<RoleRoute element={<StartOrder />} requiredRoles={["staff"]} />} />} />
+            <Route path="/shop/:orderId" element={<ProtectedRoute element={<RoleRoute element={<ShopPage />} requiredRoles={["staff"]} />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
             <Route
               path="/"

@@ -1,7 +1,7 @@
 USE welcomehome;
 
 -- Insert Categories
-INSERT INTO Category (mainCategory, subCategory, catNotes) VALUES
+INSERT IGNORE INTO Category (mainCategory, subCategory, catNotes) VALUES
 ('Furniture', 'Chairs', 'Various types of chairs'),
 ('Furniture', 'Tables', 'Different styles of tables'),
 ('Electronics', 'Mobile', 'Smartphones and accessories'),
@@ -10,7 +10,7 @@ INSERT INTO Category (mainCategory, subCategory, catNotes) VALUES
 ('Clothing', 'Women', 'Women\'s apparel');
 
 -- Insert Items
-INSERT INTO Item (iDescription, photo, color, isNew, hasPieces, material, mainCategory, subCategory) VALUES
+INSERT IGNORE INTO Item (iDescription, photo, color, isNew, hasPieces, material, mainCategory, subCategory) VALUES
 ('Wooden Dining Chair', 'chair1.jpg', 'Brown', TRUE, TRUE, 'Wood', 'Furniture', 'Chairs'),
 ('Glass Coffee Table', 'table1.jpg', 'Transparent', TRUE, FALSE, 'Glass', 'Furniture', 'Tables'),
 ('Smartphone XYZ', 'phone1.jpg', 'Black', TRUE, TRUE, 'Plastic', 'Electronics', 'Mobile'),
@@ -57,14 +57,14 @@ INSERT INTO Act (userName, roleID) VALUES
 ('asmith', 'donor'); -- Assigning donor role to Alice Smith
 
 -- Insert Locations
-INSERT INTO Location (roomNum, shelfNum, shelf, shelfDescription) VALUES
+INSERT IGNORE INTO Location (roomNum, shelfNum, shelf, shelfDescription) VALUES
 (1, 1, 'A', 'Main storage shelf'),
 (1, 2, 'B', 'Secondary storage shelf'),
 (2, 1, 'C', 'Clothing shelf'),
 (2, 2, 'D', 'Electronics shelf');
 
 -- Insert Pieces
-INSERT INTO Piece (ItemID, pieceNum, pDescription, length, width, height, roomNum, shelfNum, pNotes) VALUES
+INSERT IGNORE INTO Piece (ItemID, pieceNum, pDescription, length, width, height, roomNum, shelfNum, pNotes) VALUES
 (1, 1, 'Legs of the chair', 30, 30, 100, 1, 1, 'Solid wood legs'),
 (1, 2, 'Seat cushion', 50, 50, 10, 1, 1, 'Comfortable cushion'),
 (5, 1, 'Sleeves', 20, 15, 60, 2, 1, 'Stylish leather sleeves'),
