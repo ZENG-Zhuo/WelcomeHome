@@ -4,19 +4,27 @@ import axios from "axios";
 import config from "../config";
 
 // TypeScript interfaces for ItemLocation response
-interface ItemLocation {
+interface PieceLocation {
+  pieceNum: number;
+  description: string;
+  dimensions: {
+    length: number;
+    width: number;
+    height: number;
+  };
   roomNum: number;
   shelfNum: number;
+  notes: string;
 }
 
 interface ItemLocationResponse {
   ItemID: number;
-  locations: ItemLocation[];
+  locations: PieceLocation[];
 }
 
 const FindItemLocations: React.FC = () => {
   const [itemID, setItemID] = useState<number | undefined>(undefined);
-  const [locations, setLocations] = useState<ItemLocation[]>([]);
+  const [locations, setLocations] = useState<PieceLocation[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleItemIDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,23 +44,18 @@ const FindItemLocations: React.FC = () => {
     try {
       const response = await axios.post<ItemLocationResponse>(
         `${config.apiUrl}/find_item_locations`,
-        { ItemID: itemID }
+        { ItemID: itemID },
+        {
+          withCredentials: true,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.locations.length > 0) {
-        setLocations(response.data.locations.map((arr: any) => {
-          if (Array.isArray(arr) && arr.length === 2) {
-            const [roomNum, shelfNum] = arr;
-        
-            // Validate that both roomNum and shelfNum are numbers
-            if (typeof roomNum === 'number' && typeof shelfNum === 'number') {
-              return { roomNum, shelfNum };
-            }
-          }
-          // Return default location if validation fails
-          return { roomNum: 0, shelfNum: 0 };
-        }));
-        console.log(locations);
+        setLocations(response.data.locations);
       } else {
         notification.info({
           message: "No pieces found",
@@ -80,6 +83,23 @@ const FindItemLocations: React.FC = () => {
 
   const columns = [
     {
+      title: "Piece Number",
+      dataIndex: "pieceNum",
+      key: "pieceNum",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+    },
+    // {
+    //   title: "Dimensions (L x W x H)",
+    //   render: (text: any, record: PieceLocation) => (
+    //     <span>{`${record.dimensions.length} x ${record.dimensions.width} x ${record.dimensions.height}`}</span>
+    //   ),
+    //   key: "dimensions",
+    // },
+    {
       title: "Room Number",
       dataIndex: "roomNum",
       key: "roomNum",
@@ -89,6 +109,11 @@ const FindItemLocations: React.FC = () => {
       dataIndex: "shelfNum",
       key: "shelfNum",
     },
+    // {
+    //   title: "Notes",
+    //   dataIndex: "notes",
+    //   key: "notes",
+    // },
   ];
 
   return (
@@ -117,9 +142,9 @@ const FindItemLocations: React.FC = () => {
       ) : (
         <Table
           columns={columns}
-          dataSource={locations?locations:locations}
-          rowKey={(record, index) =>
-            `${record.roomNum}-${record.shelfNum}-${index}`
+          dataSource={locations}
+          rowKey={(record) =>
+            `${record.pieceNum}-${record.roomNum}-${record.shelfNum}`
           }
           pagination={false}
           style={{ marginTop: 20 }}

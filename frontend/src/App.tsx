@@ -6,8 +6,11 @@ import { Layout, Button, Divider } from "antd";
 import FindItemLocations from "./Components/FindItem";
 import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
+import DonationForm from "./Components/DonationForm";
+import axios from "axios";
 
 const App = () => {
+  axios.defaults.withCredentials = true
   return (
     <BrowserRouter>
       <Layout style={{ height: "100vh" }}>
@@ -23,6 +26,7 @@ const App = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/findItem" element={<FindItemLocations />} />
             <Route path="/findOrder" element={<FindOrderItems />} />
+            <Route path="/donateForm" element={<DonationForm />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route
               path="/"

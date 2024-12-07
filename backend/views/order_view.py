@@ -46,13 +46,12 @@ def find_order_items():
         p.length, 
         p.width, 
         p.height, 
-        l.roomNum, 
-        l.shelfNum
+        p.roomNum, 
+        p.shelfNum
     FROM Item i
-    JOIN ItemIn ii ON i.ItemID = ii.ItemID
-    JOIN Ordered o ON ii.orderID = o.orderID
-    JOIN Piece p ON i.ItemID = p.ItemID
-    JOIN Location l ON p.roomNum = l.roomNum AND p.shelfNum = l.shelfNum
+    NATURAL JOIN ItemIn ii
+    NATURAL JOIN Ordered o
+    NATURAL JOIN Piece p
     WHERE o.orderID = %s
     """
     
