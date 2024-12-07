@@ -6,6 +6,7 @@ import { Layout, Button, Divider } from "antd";
 import FindItemLocations from "./Components/FindItem";
 import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
+import RankSystem from "./Components/Rank";
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
             <Route path="/findItem" element={<FindItemLocations />} />
             <Route path="/findOrder" element={<FindOrderItems />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/rankSystem" element={<RankSystem />} />
             <Route
               path="/"
               element={
