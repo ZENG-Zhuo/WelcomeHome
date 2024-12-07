@@ -14,6 +14,8 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import RoleRoute from "./Components/RoleRoute";
 
 import axios from "axios";
+import OrderUpdate from "./Components/OrderUpdate";
+import UserOrders from "./Components/Orders";
 
 const App = () => {
   axios.defaults.withCredentials = true
@@ -35,7 +37,9 @@ const App = () => {
             <Route path="/donateForm" element={<ProtectedRoute element={<DonationForm />} />} />
             <Route path="/startOrder" element={<ProtectedRoute element={<RoleRoute element={<StartOrder />} requiredRoles={["staff"]} />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-              <Route path="/rankSystem" element={<ProtectedRoute element={<RankSystem />} />}/>
+            <Route path="/rankSystem" element={<ProtectedRoute element={<RankSystem />} />}/>
+            <Route path="/orderUpdate" element={<ProtectedRoute element={<OrderUpdate />} />}/>
+            <Route path="/orders" element={<ProtectedRoute element={<UserOrders />} />}/>
             <Route
               path="/"
               element={

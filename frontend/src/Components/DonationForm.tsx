@@ -28,13 +28,13 @@ interface Piece {
 }
 
 interface Item {
-  pDescription: string; // Item description
-  color?: string; // Optional
-  isNew?: boolean; // Optional
-  material?: string; // Optional
-  mainCategory?: string; // Main category
-  subCategory?: string; // Sub category
-  pieces: Piece[]; // Array of pieces
+  pDescription: string;
+  color?: string;
+  isNew?: boolean;
+  material?: string;
+  mainCategory?: string;
+  subCategory?: string;
+  pieces: Piece[];
 }
 
 const DonationForm: React.FC = () => {
@@ -127,14 +127,18 @@ const DonationForm: React.FC = () => {
     setItems(newItems);
   };
 
-  const handleItemChange = (itemIndex: number, key: keyof Item | string, value: any) => {
+  const handleItemChange = (
+    itemIndex: number,
+    key: keyof Item | string,
+    value: any
+  ) => {
     const newItems = items.map((item, i) => {
       if (i === itemIndex) {
         if (key === "category") {
-          const [mainCategory, subCategory] = value.split('-'); // Split category into main and sub
+          const [mainCategory, subCategory] = value.split("-");
           return { ...item, mainCategory, subCategory };
         }
-        return { ...item, [key]: value }; // Handle other keys normally
+        return { ...item, [key]: value };
       }
       return item;
     });
@@ -152,8 +156,7 @@ const DonationForm: React.FC = () => {
         const newPieces = item.pieces.map((piece, j) => {
           if (j === pieceIndex) {
             if (key === "location") {
-              // Assuming value is in the format "roomNum-shelfNum"
-              const [roomNum, shelfNum] = (value as string).split('-');
+              const [roomNum, shelfNum] = (value as string).split("-");
               return { ...piece, roomNum: +roomNum, shelfNum: +shelfNum };
             }
             return { ...piece, [key]: value as Piece[keyof Piece] };
@@ -175,7 +178,31 @@ const DonationForm: React.FC = () => {
       form.resetFields();
     } catch (error: any) {
       console.error("Error details:", error);
-      message.error(`Failed to accept donation: ${error.response.data.message || error.message}`);
+      message.error(
+        `Failed to accept donation: ${
+          error.response.data.message || error.message
+        }`
+      );
+    }
+  };
+
+  // New function to check if user is a donor
+  const checkDonor = async () => {
+    try {
+      const response = await axios.post(`${config.apiUrl}/check_donor`, {
+        userName,
+      });
+      if (response.data.isDonor) {
+        message.success("User is a registered donor.");
+      } else {
+        message.warning("User is not a registered donor.");
+      }
+    } catch (error: any) {
+      message.error(
+        `Error checking donor status: ${
+          error.response.data.message || error.message
+        }`
+      );
     }
   };
 
@@ -188,15 +215,22 @@ const DonationForm: React.FC = () => {
             onChange={(e) => setUserName(e.target.value)}
           />
         </Form.Item>
+        <Button
+          type="primary"
+          onClick={checkDonor}
+          style={{ marginBottom: 16 }}
+        >
+          Check Donor
+        </Button>
         <Button type="primary" onClick={addItem}>
           Add Item
         </Button>
         <Collapse style={{ marginTop: 16 }}>
           {items.map((item, index) => (
             <Panel header={`Item ${index + 1}`} key={index}>
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space direction="vertical" style={{ width: "100%" }}>
                 {/* Item Description */}
-                <Tooltip title="Enter a brief description of the item (e.g. Wooden Table)">
+                <Tooltip title="Enter a brief description of the item (e.g., Wooden Table)">
                   <Input
                     placeholder="Item description"
                     value={item.pDescription}
@@ -211,17 +245,22 @@ const DonationForm: React.FC = () => {
                   <Select
                     placeholder="Select Category"
                     style={{ width: 250 }}
-                    onChange={(value) => handleItemChange(index, "category", value)} // Change here to use "category"
+                    onChange={(value) =>
+                      handleItemChange(index, "category", value)
+                    } // Handles category change
                   >
                     {categories.map((category) => (
-                      <Option key={`${category.mainCategory}-${category.subCategory}`} value={`${category.mainCategory}-${category.subCategory}`}>
+                      <Option
+                        key={`${category.mainCategory}-${category.subCategory}`}
+                        value={`${category.mainCategory}-${category.subCategory}`}
+                      >
                         {category.mainCategory} - {category.subCategory}
                       </Option>
                     ))}
                   </Select>
                 </Tooltip>
 
-                {/* Other item fields (color, isNew, material, etc.) */}
+                {/* Color Field */}
                 <Tooltip title="Specify the color of the item (e.g., Red, Blue)">
                   <Input
                     placeholder="Color"
@@ -232,6 +271,7 @@ const DonationForm: React.FC = () => {
                   />
                 </Tooltip>
 
+                {/* Is New Field */}
                 <Tooltip title="Is the item new? Select Yes or No">
                   <Select
                     placeholder="Is the item new?"
@@ -246,6 +286,7 @@ const DonationForm: React.FC = () => {
                   </Select>
                 </Tooltip>
 
+                {/* Material Field */}
                 <Tooltip title="Describe the material of the item (e.g., Metal, Wood)">
                   <Input
                     placeholder="Material"
@@ -262,10 +303,12 @@ const DonationForm: React.FC = () => {
                   </Button>
                 </Space>
 
+                {/* Pieces Section */}
                 <div>
                   <strong>Pieces:</strong>
                   {item.pieces.map((piece, pieceIndex) => (
                     <Space key={pieceIndex} style={{ marginBottom: 8 }}>
+                      {/* Piece Description */}
                       <Tooltip title="Enter a brief description of the piece (e.g. Chair)">
                         <Input
                           placeholder="Piece description"
@@ -281,7 +324,7 @@ const DonationForm: React.FC = () => {
                         />
                       </Tooltip>
 
-                      {/* Piece dimensions and other fields */}
+                      {/* Piece Dimensions */}
                       <Tooltip title="Enter the length of the piece in centimeters">
                         <Input
                           type="number"
@@ -334,17 +377,27 @@ const DonationForm: React.FC = () => {
                           placeholder="Select Location"
                           style={{ width: 250 }}
                           onChange={(value) =>
-                            handlePieceChange(index, pieceIndex, "location", value)
+                            handlePieceChange(
+                              index,
+                              pieceIndex,
+                              "location",
+                              value
+                            )
                           }
                         >
                           {locations.map((location) => (
-                            <Option key={`${location.roomNum}-${location.shelfNum}`} value={`${location.roomNum}-${location.shelfNum}`}>
-                              {location.roomNum} - {location.shelf} ({location.shelfDescription})
+                            <Option
+                              key={`${location.roomNum}-${location.shelfNum}`}
+                              value={`${location.roomNum}-${location.shelfNum}`}
+                            >
+                              {location.roomNum} - {location.shelf} (
+                              {location.shelfDescription})
                             </Option>
                           ))}
                         </Select>
                       </Tooltip>
 
+                      {/* Notes Field for Piece */}
                       <Tooltip title="Any additional notes or comments about the piece">
                         <Input
                           placeholder="Notes"

@@ -88,7 +88,7 @@ def accept_donation():
                 INSERT INTO Item (iDescription, color, isNew, hasPieces, material, mainCategory, subCategory)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (item.get('pDescription'), item.get('color'), item.get('isNew', True), 
-                  item.get('hasPieces', True), item.get('material'), 
+                  len(item.get('pieces', [])) > 1, item.get('material'), 
                   item.get('mainCategory'), item.get('subCategory')))
             
             # Get the last inserted ItemID
@@ -127,3 +127,28 @@ def accept_donation():
     return jsonify({
         "message": "Donation accepted successfully."
     }), 200
+    
+@donation_bp.route('/check_donor', methods=['POST'])
+@staff_required
+def check_donor():
+    data = request.get_json()
+    user_name = data.get('userName')
+
+    if not user_name:
+        return jsonify({"error": "userName is required."}), 400
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT * FROM Act WHERE userName = %s AND roleID = 'donor'
+    """, (user_name,))
+    donor_check = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if donor_check:
+        return jsonify({"isDonor": True}), 200
+    else:
+        return jsonify({"isDonor": False}), 200
