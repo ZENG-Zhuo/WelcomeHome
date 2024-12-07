@@ -1,31 +1,54 @@
+from functools import wraps
 from flask import Blueprint, request, jsonify, session, redirect, url_for, flash
 import mysql.connector
-import hashlib
-import os
-import base64
 from utils import get_db_connection  # Assuming your connection class is in db_connection.py
-from flask_cors import cross_origin
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
 auth_bp = Blueprint('auth_bp', __name__)
 
-def hash_password(password):
-    salt = os.urandom(16)  # Generate a random salt
-    salted_password = salt + password.encode('utf-8')
-    hashed_password = hashlib.sha256(salted_password).hexdigest()
-    return base64.b64encode(salt + hashed_password.encode('utf-8'))  # Store salt with the hash
+# Decorators    
+def staff_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if 'roles' exist in session and if 'staff' is in the roles
+        if 'roles' not in session:
+            return jsonify({"error": "Not login in. Please login first."}), 401
+        if 'staff' not in session['roles']:
+            return jsonify({"error": "Access denied. Staff only."}), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
-def check_password(stored_encoded_password, provided_password):
-    stored_password = base64.b64decode(stored_encoded_password)
-    salt = stored_password[:16]  # Extract the salt
-    salted_provided_password = salt + provided_password.encode('utf-8')
-    hashed_provided_password = hashlib.sha256(salted_provided_password).hexdigest()
-    return stored_password[16:] == hashed_provided_password.encode('utf-8')
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        print(session)
+        if 'userName' not in session:
+            return jsonify({"error": "Please login first"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Protected routes
+@auth_bp.route('/check_role', methods=['POST'])
+def check_role():
+    if 'roles' not in session:
+        return jsonify({"error": "Not login in. Please login first."}), 401
+    
+    roles = request.json.get('roles')
+    has_common_role = bool(set(roles) & set(session['roles']))
+    if has_common_role:
+        return jsonify({"message": "Access granted"}), 200
+    return jsonify({"error": "Your roles are unauthorized to this page."}), 403
+
+@auth_bp.route('/check_login', methods=['GET'])
+@login_required
+def check_login():
+    # print(session)
+    return jsonify({"message": "Logged"}), 200
+
 
 @auth_bp.route('/roles', methods=['POST'])
-@cross_origin()
 def get_roles():
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -45,7 +68,6 @@ def get_roles():
         connection.close()
 
 @auth_bp.route('/register', methods=['POST'])
-@cross_origin()
 def register():
     user_data = request.get_json()
     userName = user_data['userName']
@@ -63,6 +85,10 @@ def register():
     cursor = connection.cursor()
 
     try:
+        cursor.execute("SELECT * FROM Person WHERE userName = %s", (userName,))
+        user = cursor.fetchone()
+        if user:
+            return jsonify({"error": f"Username {userName} exists!"}), 400
         # Insert user into Person table
         cursor.execute("INSERT INTO Person (userName, password, fname, lname, email) VALUES (%s, %s, %s, %s, %s)",
                        (userName, hashed_password, fname, lname, email))
@@ -85,7 +111,6 @@ def register():
         connection.close()
 
 @auth_bp.route('/login', methods=['POST'])
-@cross_origin()
 def login():
     user_data = request.get_json()
     userName = user_data['userName']
@@ -94,22 +119,48 @@ def login():
     connection = get_db_connection()
     cursor = connection.cursor()
 
+    # Fetch user information
     cursor.execute("SELECT * FROM Person WHERE userName = %s", (userName,))
     user = cursor.fetchone()
 
-    # if user and check_password(user[1].encode('utf-8'), password):
     if user and check_password_hash(user[1], password):
+        # Store user information in session
         session['userName'] = user[0]  # Store username in session
         session['fname'] = user[2]
         session['lname'] = user[3]
+
+        # Fetch the role of the user
+        cursor.execute("""
+            SELECT roleID FROM Act WHERE userName = %s
+        """, (userName,))
+        roles = cursor.fetchall()
+        
+        # Store roles in session
+        session['roles'] = [role[0] for role in roles]  # Assuming roleID is the first column
+
+        # print(session['userName'])
+        # print('userName' in session)
+        # print(session['roles'])
+        print("login:",session)
+        session.modified = True
         return jsonify({"message": "Login success!"}), 200
     else:
-        flash("Login failed: Invalid username or password.")
         return jsonify({"error": "Invalid username or password"}), 401
 
+@auth_bp.route('/user', methods=['GET'])
+def get_user():
+    if 'userName' in session:
+        return jsonify({"userName": session['userName'], "fname": session['fname'], "lname": session['lname'], "roles": session['roles']})
+    return jsonify({"error": "Please login first"}), 401
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logout successful!"}), 200
+
 @auth_bp.route('/protected', methods=['GET'])
-@cross_origin()
 def protected_resource(): # test protected
+    print(session)
     if 'userName' in session:
         return f"Welcome to the protected resource, {session['fname']} {session['lname']}!"
     return jsonify({"error": "Please login first"}), 401

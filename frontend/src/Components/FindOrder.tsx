@@ -31,6 +31,7 @@ const FindOrderItems: React.FC = () => {
   const [itemLocations, setItemLocations] = useState<ItemLocations>({});
 
   const handleSubmit = async (values: any) => {
+    setItemLocations({});
     try {
       const response = await axios.post(`${config.apiUrl}/find_order_items`, {
         orderID: values.orderID,

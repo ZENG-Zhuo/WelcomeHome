@@ -1,6 +1,6 @@
 CREATE database welcomehome;
 use welcomehome;
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'TPGSecretPass';
+-- ALTER USER 'root'@'localhost' IDENTIFIED BY 'TPGSecretPass';
 
 CREATE TABLE Category (
     mainCategory VARCHAR(50) NOT NULL,

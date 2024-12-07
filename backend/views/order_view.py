@@ -1,6 +1,9 @@
 # views/order_views.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
+import mysql
 from utils import get_db_connection
+from datetime import date
+from .auth_view import staff_required, login_required
 
 order_bp = Blueprint('order_bp', __name__)
 
@@ -14,17 +17,46 @@ def get_orders():
     connection.close()
     return jsonify(orders)
 
-@order_bp.route('/orders', methods=['POST'])
+@order_bp.route('/createOrder', methods=['POST'])
+@login_required
+@staff_required
 def create_order():
-    new_order = request.get_json()
+    client_name = request.json.get('username')
+    
+    # check not the staff itself
+    if session['userName'] == client_name:
+        return jsonify({"error": "Cannot create an order for yourself"}), 400
+    
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute("INSERT INTO Ordered (orderDate, orderNotes, supervisor, client) VALUES (%s, %s, %s, %s)",
-                   (new_order['orderDate'], new_order['orderNotes'], new_order['supervisor'], new_order['client']))
-    connection.commit()
-    cursor.close()
-    connection.close()
-    return jsonify(new_order), 201
+    try:
+        # check if the client exists    
+        cursor.execute("SELECT * FROM Person WHERE userName = %s", (client_name,))
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"error": "Client does not exist"}), 400
+
+        # Ensure (client_name, 'client') exists in Act
+        cursor.execute("INSERT IGNORE INTO Act (userName, roleID) VALUES (%s, 'client')", (client_name,))
+        
+        orderDate = date.today()
+        cursor.execute(
+            "INSERT INTO Ordered (orderDate, supervisor, client) VALUES (%s, %s, %s)",
+            (orderDate, session['userName'], client_name)
+        )
+        connection.commit()
+        
+        # Retrieve the inserted orderID
+        order_id = cursor.lastrowid
+        print("order_id", order_id)
+        return jsonify({"orderID": order_id}), 201
+
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"error": str(err)}), 400
+    finally:
+        cursor.close()
+        connection.close()
 
 @order_bp.route('/find_order_items', methods=['POST'])
 def find_order_items():
@@ -46,13 +78,12 @@ def find_order_items():
         p.length, 
         p.width, 
         p.height, 
-        l.roomNum, 
-        l.shelfNum
+        p.roomNum, 
+        p.shelfNum
     FROM Item i
-    JOIN ItemIn ii ON i.ItemID = ii.ItemID
-    JOIN Ordered o ON ii.orderID = o.orderID
-    JOIN Piece p ON i.ItemID = p.ItemID
-    JOIN Location l ON p.roomNum = l.roomNum AND p.shelfNum = l.shelfNum
+    NATURAL JOIN ItemIn ii
+    NATURAL JOIN Ordered o
+    NATURAL JOIN Piece p
     WHERE o.orderID = %s
     """
     
