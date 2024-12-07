@@ -6,6 +6,7 @@ import { Layout, Button, Divider } from "antd";
 import FindItemLocations from "./Components/FindItem";
 import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
+import RankSystem from "./Components/Rank";
 import DonationForm from "./Components/DonationForm";
 import StartOrder from "./Components/StartOrder";
 
@@ -34,6 +35,7 @@ const App = () => {
             <Route path="/donateForm" element={<ProtectedRoute element={<DonationForm />} />} />
             <Route path="/startOrder" element={<ProtectedRoute element={<RoleRoute element={<StartOrder />} requiredRoles={["staff"]} />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+              <Route path="/rankSystem" element={<ProtectedRoute element={<RankSystem />} />}/>
             <Route
               path="/"
               element={
