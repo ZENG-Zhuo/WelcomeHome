@@ -32,8 +32,8 @@ interface Item {
   color?: string; // Optional
   isNew?: boolean; // Optional
   material?: string; // Optional
-  mainCategory?: string; // Optional
-  subCategory?: string; // Optional
+  mainCategory?: string; // Main category
+  subCategory?: string; // Sub category
   pieces: Piece[]; // Array of pieces
 }
 
@@ -130,6 +130,10 @@ const DonationForm: React.FC = () => {
   const handleItemChange = (itemIndex: number, key: keyof Item | string, value: any) => {
     const newItems = items.map((item, i) => {
       if (i === itemIndex) {
+        if (key === "category") {
+          const [mainCategory, subCategory] = value.split('-'); // Split category into main and sub
+          return { ...item, mainCategory, subCategory };
+        }
         return { ...item, [key]: value }; // Handle other keys normally
       }
       return item;
@@ -169,8 +173,9 @@ const DonationForm: React.FC = () => {
       message.success("Donation accepted successfully.");
       setItems([]); // Clear the items after successful submission
       form.resetFields();
-    } catch (error) {
-      message.error("Failed to accept donation.");
+    } catch (error: any) {
+      console.error("Error details:", error);
+      message.error(`Failed to accept donation: ${error.response.data.message || error.message}`);
     }
   };
 
@@ -206,10 +211,10 @@ const DonationForm: React.FC = () => {
                   <Select
                     placeholder="Select Category"
                     style={{ width: 250 }}
-                    onChange={(value) => handleItemChange(index, "mainCategory", value)}
+                    onChange={(value) => handleItemChange(index, "category", value)} // Change here to use "category"
                   >
                     {categories.map((category) => (
-                      <Option key={`${category.mainCategory}-${category.subCategory}`} value={category.subCategory}>
+                      <Option key={`${category.mainCategory}-${category.subCategory}`} value={`${category.mainCategory}-${category.subCategory}`}>
                         {category.mainCategory} - {category.subCategory}
                       </Option>
                     ))}

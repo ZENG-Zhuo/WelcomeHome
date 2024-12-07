@@ -1,4 +1,5 @@
 # views/donation_views.py
+from datetime import datetime
 from flask import Blueprint, app, request, jsonify
 from .auth_view import staff_required
 from utils import get_db_connection
@@ -60,6 +61,7 @@ def create_donation():
 @staff_required
 def accept_donation():
     data = request.get_json()
+    print(data)
     user_name = data.get('userName')
     items = data.get('items')  # Expecting a list of items, each containing multiple pieces
 
@@ -106,7 +108,14 @@ def accept_donation():
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (item_id, piece_num, piece.get('pDescription'), piece.get('length'), 
                        piece.get('width'), piece.get('height'), room_num, shelf_num, piece.get('pNotes')))
-        
+            
+            # Insert the donation record into DonatedBy
+            donation_date = datetime.now().date()  # Assuming you want the current date
+            cursor.execute("""
+                INSERT INTO DonatedBy (ItemID, userName, donateDate)
+                VALUES (%s, %s, %s)
+            """, (item_id, user_name, donation_date))
+
         connection.commit()
     except Exception as e:
         connection.rollback()
