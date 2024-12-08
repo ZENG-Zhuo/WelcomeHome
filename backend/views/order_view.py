@@ -11,6 +11,7 @@ order_bp = Blueprint('order_bp', __name__)
 @order_bp.route('/orderInfo', methods=['POST']) 
 def order_info():
     orderid = request.json.get('orderID')
+    print("OrderID: ", orderid)
     
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -19,13 +20,11 @@ def order_info():
         order = cursor.fetchone()
         if not order:
             return jsonify({"error": "Order not found"}), 404
-        print("Order info: ", order)
                 
         cursor.execute("SELECT * FROM ItemIn WHERE orderID = %s", (orderid,))
         order['submit'] = True if cursor.fetchone() else False
         
         order['orderDate'] = order['orderDate'].strftime("%Y-%m-%d")
-        print("Order found", order)
         return jsonify(order), 200
     except mysql.connector.Error as err:
         return jsonify({"error": str(err)}), 400
@@ -83,6 +82,7 @@ def add_items_to_order():
     data = request.json
     order_id = data['orderID']
     items = data['items']  # List of ItemIDs    
+    # print("Items to add: ", items)
 
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -92,8 +92,10 @@ def add_items_to_order():
     try:
         for item_id in items:
             # EXIST for efficiency
-            cursor.execute("SELECT EXISTS(SELECT * FROM ItemIn WHERE orderID = %s)", (item_id,))
-            if cursor.fetchone():
+            cursor.execute("SELECT EXISTS(SELECT * FROM ItemIn WHERE itemID = %s)", (item_id,))
+            data = cursor.fetchone()
+            print("Data: ", data)
+            if data[0] == 1: # exists
                 unavailable_items.append(item_id)
         if len(unavailable_items) > 0:
             return jsonify({"status": "failed", "unavailable":unavailable_items})

@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const staffFeatures: Feature[] = [
-    { label: "Accept Donation", path: "/acceptDonation" },
+    { label: "Accept Donation", path: "/donateForm" },
     { label: "Start an Order", path: "/startOrder" },
   ];
 

@@ -23,7 +23,7 @@ def staff_required(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print(session)
+        # print(session)
         if 'userName' not in session:
             return jsonify({"error": "Please login first"}), 401
         return f(*args, **kwargs)

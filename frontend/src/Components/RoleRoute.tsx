@@ -16,8 +16,6 @@ const RoleRoute: React.FC<RoleRouteProps> = ({ element, requiredRoles }) => {
 
   useEffect(() => {
     const checkUserRole = async () => {
-      console.log("Checking user role");
-      console.log(requiredRoles);
       try {
         const response = await axios.post(`${config.apiUrl}/check_role`, 
           { roles: requiredRoles },

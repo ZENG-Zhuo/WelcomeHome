@@ -17,7 +17,7 @@ def get_items():
         conditions.append("subCategory = %s")
         params.append(sub_category)
     try:
-        with get_db_connection().cursor() as cursor:
+        with get_db_connection().cursor(dictionary=True) as cursor:
             sql = f"""
                 SELECT ItemID, iDescription, photo, color, isNew, material
                 FROM Item
@@ -25,10 +25,7 @@ def get_items():
                 AND ItemID NOT IN (SELECT ItemID FROM ItemIn)
             """
             cursor.execute(sql, params)
-            data = cursor.fetchall()
-            columns = [col[0] for col in cursor.description]
-        
-        items = [dict(zip(columns, row)) for row in data]
+            items = cursor.fetchall()
         print(items)
         return jsonify(items), 200
 
