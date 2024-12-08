@@ -26,3 +26,9 @@ class DatabaseConnection:
 def get_db_connection():
     connection = DatabaseConnection().get_connection()
     return connection
+
+
+# clean up the string value
+def process_string_value(value):
+    value = value.strip()
+    return value if value else None

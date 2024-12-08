@@ -3,7 +3,7 @@ import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import config from "../config";
-import { notification, Spin } from "antd";
+import { notification } from "antd";
 
 type Feature = {
   label: string;
@@ -32,18 +32,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(`${config.apiUrl}/logout`, {}, { withCredentials: true });
-      navigate("/"); 
-    } catch (error) {
-      notification.error({
-        message: "Logout Failed",
-        description: "An error occurred while logging out.",
-      });
-    }
-  };
-
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -57,11 +45,11 @@ const Dashboard: React.FC = () => {
 
   const volunteerStaffFeatures: Feature[] = [
     { label: "Prepare Order", path: "/prepareOrder" },
-    { label: "Update Order Status", path: "/updateOrderStatus" },
+    { label: "Update Order Status", path: "/orderUpdate" },
   ];
 
   const staffFeatures: Feature[] = [
-    { label: "Accept Donation", path: "/acceptDonation" },
+    { label: "Accept Donation", path: "/donateForm" },
     { label: "Start an Order", path: "/startOrder" },
   ];
 
@@ -78,9 +66,6 @@ const Dashboard: React.FC = () => {
         
         <div className="user-info">
           <p id="user-fname">Hello, <span>{fname}</span>!</p>
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
         </div>
 
         <p id="user-role">

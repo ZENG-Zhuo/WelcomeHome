@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import Blueprint, request, jsonify, session, redirect, url_for, flash
 import mysql.connector
-from utils import get_db_connection  # Assuming your connection class is in db_connection.py
+from utils import get_db_connection, process_string_value
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -23,7 +23,7 @@ def staff_required(f):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print(session)
+        # print(session)
         if 'userName' not in session:
             return jsonify({"error": "Please login first"}), 401
         return f(*args, **kwargs)
@@ -70,14 +70,17 @@ def get_roles():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     user_data = request.get_json()
-    userName = user_data['userName']
-    password = user_data['password']
-    fname = user_data['fname']
-    lname = user_data['lname']
-    email = user_data['email']
+    userName = process_string_value(user_data['userName'])
+    password = user_data['password'] # Allow spaces in password
+    fname = process_string_value(user_data['fname'])
+    lname = process_string_value(user_data['lname'])
+    email = process_string_value(user_data['email'])
     phones = user_data.get('phones', [])  # Expecting a list of phone numbers
+    phones = [process_string_value(phone) for phone in phones]
     role_id = user_data.get('roleID')  # Expecting a role ID
 
+    if not userName or not password or not fname or not lname or not email:
+        return jsonify({"error": "The required fields cannot be Spaces."}), 400
     # Hash the password
     hashed_password = generate_password_hash(password)
 
@@ -95,11 +98,12 @@ def register():
         
         # Insert phone numbers into PersonPhone table
         for phone in phones:
-            cursor.execute("INSERT INTO PersonPhone (userName, phone) VALUES (%s, %s)", (userName, phone))
+            if phone:
+                cursor.execute("INSERT INTO PersonPhone (userName, phone) VALUES (%s, %s)", (userName, phone, ))
         
         # Insert role into Act table
         if role_id:
-            cursor.execute("INSERT INTO Act (userName, roleID) VALUES (%s, %s)", (userName, role_id))
+            cursor.execute("INSERT INTO Act (userName, roleID) VALUES (%s, %s)", (userName, role_id, ))
 
         connection.commit()
         return jsonify({"message": "User registered successfully"}), 201

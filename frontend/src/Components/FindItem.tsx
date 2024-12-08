@@ -128,6 +128,7 @@ const FindItemLocations: React.FC = () => {
             onChange={handleItemIDChange}
             placeholder="Enter Item ID"
             style={{ width: 200 }}
+            min={1} // Should be a positive integer
           />
         </Form.Item>
         <Form.Item>

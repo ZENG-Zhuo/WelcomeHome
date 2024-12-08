@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Button, Input, Table, notification, Spin, Form } from "antd";
+import { Button, Table, notification, Spin, Form, DatePicker } from "antd";
 import axios from "axios";
 import config from "../config";
+import moment from "moment";
 
 interface RankData {
   userName: string;
@@ -14,12 +15,25 @@ const RankSystem: React.FC = () => {
   const [rankData, setRankData] = useState<RankData[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartTime(e.target.value);
+  const formatDateToDisplay = (date: string) => {
+    if (!date) return "";
+    return moment(date, "YYYY-MM-DD").format("MM-DD-YY");
   };
 
-  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEndTime(e.target.value);
+  const handleStartTimeChange = (date: moment.Moment | null) => {
+    if (date) {
+      setStartTime(date.format("YYYY-MM-DD"));
+    } else {
+      setStartTime("");
+    }
+  };
+
+  const handleEndTimeChange = (date: moment.Moment | null) => {
+    if (date) {
+      setEndTime(date.format("YYYY-MM-DD"));
+    } else {
+      setEndTime("");
+    }
   };
 
   const fetchRankData = async () => {
@@ -69,24 +83,23 @@ const RankSystem: React.FC = () => {
   return (
     <div style={{ padding: 20 }}>
       <h2>Rank System</h2>
-      <h3>volunteer participates in the most tasks
-in the selected time period</h3>
+      <h3>volunteer participates in the most tasks in the selected time period</h3>
       <Form layout="inline">
         <Form.Item label="Start Time">
-          <Input
-            type="date"
-            value={startTime}
+          <DatePicker
+            value={startTime ? moment(startTime, "YYYY-MM-DD") : null}
+            format="MM-DD-YY"
             onChange={handleStartTimeChange}
-            placeholder="Enter Start Time"
+            placeholder="MM-DD-YY"
             style={{ width: 200 }}
           />
         </Form.Item>
         <Form.Item label="End Time">
-          <Input
-            type="date"
-            value={endTime}
+          <DatePicker
+            value={endTime ? moment(endTime, "YYYY-MM-DD") : null}
+            format="MM-DD-YY"
             onChange={handleEndTimeChange}
-            placeholder="Enter End Time"
+            placeholder="MM-DD-YY"
             style={{ width: 200 }}
           />
         </Form.Item>
@@ -104,7 +117,7 @@ in the selected time period</h3>
           columns={columns}
           dataSource={rankData}
           rowKey={(record) => record.userName}
-          pagination={false}
+           pagination={{ pageSize: 5 }}
           style={{ marginTop: 20 }}
         />
       )}
@@ -113,6 +126,10 @@ in the selected time period</h3>
 };
 
 export default RankSystem;
+
+
+
+
 
 
 

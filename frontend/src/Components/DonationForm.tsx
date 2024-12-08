@@ -9,6 +9,7 @@ import {
   message,
   Select,
   Tooltip,
+  notification
 } from "antd";
 import axios from "axios";
 import config from "../config";
@@ -28,7 +29,7 @@ interface Piece {
 }
 
 interface Item {
-  pDescription: string;
+  iDescription: string;
   color?: string;
   isNew?: boolean;
   material?: string;
@@ -69,7 +70,7 @@ const DonationForm: React.FC = () => {
 
   const addItem = () => {
     const newItem: Item = {
-      pDescription: "",
+      iDescription: "",
       color: "",
       isNew: false,
       material: "",
@@ -178,11 +179,10 @@ const DonationForm: React.FC = () => {
       form.resetFields();
     } catch (error: any) {
       console.error("Error details:", error);
-      message.error(
-        `Failed to accept donation: ${
-          error.response.data.message || error.message
-        }`
-      );
+      notification.error({
+        message: "Failed to Accept Donation",
+        description: error.response?.data?.error|| error.response.data.message || error.message
+      });
     }
   };
 
@@ -200,7 +200,7 @@ const DonationForm: React.FC = () => {
     } catch (error: any) {
       message.error(
         `Error checking donor status: ${
-          error.response.data.message || error.message
+          error.response?.data?.error|| error.response.data.message || error.message
         }`
       );
     }
@@ -209,10 +209,13 @@ const DonationForm: React.FC = () => {
   return (
     <div>
       <Form form={form} layout="vertical">
-        <Form.Item label="Donor Username" required>
+        <Form.Item label="Donor Username" name="userName" rules={[
+          { required: true, message: 'Please enter donor\'s name!' }, 
+        ]}>
           <Input
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
+            style={{ width: 200 }}
           />
         </Form.Item>
         <Button
@@ -233,9 +236,9 @@ const DonationForm: React.FC = () => {
                 <Tooltip title="Enter a brief description of the item (e.g., Wooden Table)">
                   <Input
                     placeholder="Item description"
-                    value={item.pDescription}
+                    value={item.iDescription}
                     onChange={(e) =>
-                      handleItemChange(index, "pDescription", e.target.value)
+                      handleItemChange(index, "iDescription", e.target.value)
                     }
                   />
                 </Tooltip>
