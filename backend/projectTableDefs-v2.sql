@@ -148,4 +148,25 @@ BEGIN
     END IF;
 END; //
 
+CREATE TRIGGER update_item_after_piece_update
+AFTER UPDATE ON Piece
+FOR EACH ROW
+BEGIN
+    -- update hasPieces in two items
+    UPDATE Item 
+    SET hasPieces = 
+        (SELECT 
+            CASE 
+                WHEN COUNT(*) > 0 THEN TRUE 
+                ELSE FALSE 
+            END 
+         FROM Piece 
+         WHERE Piece.ItemID = OLD.ItemID)
+    WHERE Item.ItemID = OLD.ItemID;
+
+    UPDATE Item 
+    SET hasPieces = TRUE
+    WHERE Item.ItemID = NEW.ItemID;
+END; //
+
 DELIMITER ;

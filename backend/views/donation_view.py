@@ -80,34 +80,52 @@ def accept_donation():
     if not donor_check:
         return jsonify({"error": "User is not a registered donor."}), 403
 
-    # Accept the donation for each item
     try:
         for item in items:
-            # Insert the item record
+            # Check if the item has pieces
+            pieces = item.get('pieces')
+            if not pieces:
+                return jsonify({"error": "Each item must have one piece at least."}), 400
+            
+            # Check mainCategory and subCategory
+            if not item.get('mainCategory') or not item.get('subCategory'):
+                return jsonify({"error": "Each item must have mainCategory and subCategory."}), 400
+            
+            # Process string values
+            def process_string_value(value):
+                value = value.strip()
+                return value if value else None
+            iDescription= process_string_value(item.get('iDescription'))
+            color = process_string_value(item.get('color'))
+            material = process_string_value(item.get('material'))
+                        
             cursor.execute("""
                 INSERT INTO Item (iDescription, color, isNew, hasPieces, material, mainCategory, subCategory)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (item.get('pDescription'), item.get('color'), item.get('isNew', True), 
-                  len(item.get('pieces', [])) > 1, item.get('material'), 
-                  item.get('mainCategory'), item.get('subCategory')))
+            """, (iDescription, color, item.get('isNew'), False # if change table schema, hasPieces not needed
+                  , material, item.get('mainCategory'), item.get('subCategory')))
             
             # Get the last inserted ItemID
             item_id = cursor.lastrowid
 
             # Insert each piece associated with this item
-            for piece in item.get('pieces', []):
+            for piece in pieces:
                 piece_num = piece.get('pieceNum')
                 room_num = piece.get('roomNum')
                 shelf_num = piece.get('shelfNum')
-
-                if not piece_num or not room_num or not shelf_num:
-                    return jsonify({"error": "Each piece must have pieceNum, roomNum, and shelfNum."}), 400
+                
+                if not room_num or not shelf_num:
+                    return jsonify({"error": "Each piece must have roomNum, and shelfNum."}), 400
+                
+                # Process string values
+                pDescription = process_string_value(piece.get('pDescription'))
+                pNotes = process_string_value(piece.get('pNotes'))
 
                 cursor.execute("""
                     INSERT INTO Piece (ItemID, pieceNum, pDescription, length, width, height, roomNum, shelfNum, pNotes)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (item_id, piece_num, piece.get('pDescription'), piece.get('length'), 
-                       piece.get('width'), piece.get('height'), room_num, shelf_num, piece.get('pNotes')))
+                """, (item_id, piece_num, pDescription, piece.get('length'), 
+                       piece.get('width'), piece.get('height'), room_num, shelf_num, pNotes))
             
             # Insert the donation record into DonatedBy
             donation_date = datetime.now().date()  # Assuming you want the current date
@@ -120,13 +138,11 @@ def accept_donation():
     except Exception as e:
         connection.rollback()
         return jsonify({"error": f"Donation acceptance failed: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
 
-    cursor.close()
-    connection.close()
-
-    return jsonify({
-        "message": "Donation accepted successfully."
-    }), 200
+    return jsonify({"message": "Donation accepted successfully."}), 200
     
 @donation_bp.route('/check_donor', methods=['POST'])
 @staff_required
