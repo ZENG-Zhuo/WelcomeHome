@@ -29,8 +29,7 @@ const Login = () => {
         message: "Login Success",
         description: response.data.message,
       });
-      const userRole = response.data.userRole; // 获取后端返回的 userRole
-      navigate("/dashboard", { state: { userRole } });
+      navigate("/dashboard");
     } catch (error: any) {
       notification.error({
         message: "Login Failed",

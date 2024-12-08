@@ -39,7 +39,6 @@ const FindOrderItems: React.FC = () => {
       setItemLocations(response.data);
     } catch (error) {
       message.error("Error fetching items. Please check the order ID.");
-      console.error(error);
     }
   };
 
