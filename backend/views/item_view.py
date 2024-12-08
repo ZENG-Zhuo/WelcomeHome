@@ -60,10 +60,10 @@ def find_item_locations():
     cursor = connection.cursor()
     
     # Check if the item exists
-    cursor.execute("SELECT * FROM Item WHERE ItemID = %s", (item_id,))
+    cursor.execute("SELECT * FROM Item WHERE ItemID = %s AND hasPieces = TRUE", (item_id,))
     item = cursor.fetchone()
     if not item:
-        return jsonify({"error": "Item not exists"}), 404
+        return jsonify({"error": "Item not exists or no piece exist in this item"}), 404
 
     # Updated query to exclude the piece located at (-1, -1)
     cursor.execute("""
