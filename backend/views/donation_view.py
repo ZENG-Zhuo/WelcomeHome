@@ -88,7 +88,7 @@ def accept_donation():
                 INSERT INTO Item (iDescription, color, isNew, hasPieces, material, mainCategory, subCategory)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (item.get('pDescription'), item.get('color'), item.get('isNew', True), 
-                  len(item.get('pieces', [])) > 1, item.get('material'), 
+                  len(item.get('pieces', [])) > 0, item.get('material'), 
                   item.get('mainCategory'), item.get('subCategory')))
             
             # Get the last inserted ItemID

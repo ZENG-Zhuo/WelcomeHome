@@ -46,11 +46,11 @@ def find_item_locations():
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    # Query to retrieve detailed information about pieces for the given ItemID
+    # Updated query to exclude the piece located at (-1, -1)
     cursor.execute("""
         SELECT p.pieceNum, p.pDescription, p.length, p.width, p.height, p.roomNum, p.shelfNum, p.pNotes 
         FROM Piece p
-        WHERE p.ItemID = %s
+        WHERE p.ItemID = %s AND NOT (p.roomNum = -1 AND p.shelfNum = -1)
     """, (item_id,))
     
     # Fetch the results
