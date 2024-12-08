@@ -1,8 +1,9 @@
 import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom"; // Import necessary components from react-router-dom
+import { Layout, Button, Divider } from "antd";
+
 import Login from "./Components/Login";
 import Register from "./Components/Register";
-import { Layout, Button, Divider } from "antd";
 import FindItemLocations from "./Components/FindItem";
 import Dashboard from "./Components/Dashboard";
 import FindOrderItems from "./Components/FindOrder";
@@ -35,7 +36,7 @@ const App = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/findItem" element={<ProtectedRoute element={<FindItemLocations />} />} />
             <Route path="/findOrder" element={<ProtectedRoute element={<FindOrderItems />} />} />
-            <Route path="/donateForm" element={<ProtectedRoute element={<DonationForm />} />} />
+            <Route path="/donateForm" element={<ProtectedRoute element={<RoleRoute element={<DonationForm />} requiredRoles={["staff"]} />} />} />
             <Route path="/startOrder" element={<ProtectedRoute element={<RoleRoute element={<StartOrder />} requiredRoles={["staff"]} />} />} />
             <Route path="/shop/:orderId" element={<ProtectedRoute element={<RoleRoute element={<ShopPage />} requiredRoles={["staff"]} />} />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
