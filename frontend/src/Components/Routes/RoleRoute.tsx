@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import config from "../config";
+import config from "../../config";
 import { notification, Spin } from "antd";
 
 interface RoleRouteProps {
@@ -17,7 +17,7 @@ const RoleRoute: React.FC<RoleRouteProps> = ({ element, requiredRoles }) => {
   useEffect(() => {
     const checkUserRole = async () => {
       try {
-        const response = await axios.post(`${config.apiUrl}/check_role`, 
+        await axios.post(`${config.apiUrl}/check_role`, 
           { roles: requiredRoles },
           { withCredentials: true });
         setIsAuthorized(true);
