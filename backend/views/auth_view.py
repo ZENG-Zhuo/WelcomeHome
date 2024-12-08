@@ -99,11 +99,11 @@ def register():
         # Insert phone numbers into PersonPhone table
         for phone in phones:
             if phone:
-                cursor.execute("INSERT INTO PersonPhone (userName, phone) VALUES (%s, %s)", (userName, phone))
+                cursor.execute("INSERT INTO PersonPhone (userName, phone) VALUES (%s, %s)", (userName, phone, ))
         
         # Insert role into Act table
         if role_id:
-            cursor.execute("INSERT INTO Act (userName, roleID) VALUES (%s, %s)", (userName, role_id))
+            cursor.execute("INSERT INTO Act (userName, roleID) VALUES (%s, %s)", (userName, role_id, ))
 
         connection.commit()
         return jsonify({"message": "User registered successfully"}), 201

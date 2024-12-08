@@ -19,8 +19,11 @@ import ProtectedRoute from "./Components/Routes/ProtectedRoute";
 import RoleRoute from "./Components/Routes/RoleRoute";
 
 import axios from "axios";
+
+import OrderManagement from "./Components/OrderStatus";
 import OrderUpdate from "./Components/OrderUpdate";
 import UserOrders from "./Components/Orders";
+
 
 const App = () => {
   axios.defaults.withCredentials = true; // Send cookies with every request
@@ -40,6 +43,7 @@ const App = () => {
           <Route path="/rankSystem" element={<ProtectedRoute element={<RankSystem />} />} />
           <Route path="/prepareOrder" element={<ProtectedRoute element={<OrderUpdate />} />} />
           <Route path="/userTasks" element={<ProtectedRoute element={<UserOrders />} />} />
+          <Route path="/OrderUpdate" element={<ProtectedRoute element={<RoleRoute element={<OrderManagement />} requiredRoles={["staff","volunteer"]} />} />} />
           <Route
             path="/"
             element={

@@ -147,7 +147,7 @@ def find_order_items():
     WHERE o.orderID = %s
     """
     
-    cursor.execute(query, (order_id,))
+    cursor.execute(query, (order_id, ))
     items = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -177,6 +177,62 @@ def find_order_items():
 
     return jsonify(item_locations), 200
 
+
+@order_bp.route('/orderSupervised', methods=['GET'])
+@login_required
+def return_supervised_order():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT orderID,orderNotes,client,orderDate,d.userName,status,date FROM ordered o LEFT JOIN delivered d USING(orderID) WHERE o.supervisor = %s", (session['userName'], ))
+    supervise = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(supervise)
+
+@order_bp.route('/orderDelivered', methods=['GET'])
+@login_required
+def return_delivered_order():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT  * FROM delivered WHERE userName = %s", (session['userName'], ))
+    deliver = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(deliver)
+
+@order_bp.route('/orderStatusUpdate', methods=['POST'])
+def update_order_status():
+    try:
+        data = request.get_json()
+        order_id = data['orderID']
+        if not order_id:
+            return jsonify({"error": "orderID is required"}), 400
+        userName = data['delivererName']
+        if not userName:
+            return jsonify({"error": "delivererName is required"}), 400
+        status = data['status']
+        date = data['modifyDate']
+        if not all([status, date]):
+            return jsonify({"error": "Missing required fields: status, modifyDate"}), 400
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        query = """
+        UPDATE delivered 
+        SET status = %s, date = %s    
+        WHERE orderID = %s AND userName = %s
+        """
+        cursor.execute(query, (status, date, order_id, userName, ))
+        if cursor.rowcount == 0:
+            return jsonify({"error": "No record found to update. Check the provided orderID and delivererName."}), 404
+
+        connection.commit()
+        return jsonify({"status": "success"}), 200
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"error": str(err)}), 400
+    finally:
+            cursor.close()
+            connection.close()
 
 @order_bp.route('/orders/search', methods=['GET'])
 def search_orders():
@@ -292,3 +348,4 @@ def get_user_orders():
         connection.close()
 
     return jsonify(orders), 200
+
