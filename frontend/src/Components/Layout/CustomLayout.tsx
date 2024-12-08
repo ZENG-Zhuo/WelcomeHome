@@ -14,8 +14,9 @@ const CustomLayout: React.FC<CustomLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const showHomeButton = location.pathname !== '/dashboard';
-  const showLogoutButton = location.pathname !== '/';
-
+  
+  const outList = ['/register','/login', '/'];
+  const showLogoutButton = !outList.includes(location.pathname);
   const handleHomeClick = () => {
     navigate("/dashboard"); 
   };

@@ -2,7 +2,7 @@
 from datetime import datetime
 from flask import Blueprint, app, request, jsonify
 from .auth_view import staff_required
-from utils import get_db_connection
+from utils import get_db_connection, process_string_value
 
 donation_bp = Blueprint('donation_bp', __name__)
 
@@ -92,9 +92,6 @@ def accept_donation():
                 return jsonify({"error": "Each item must have mainCategory and subCategory."}), 400
             
             # Process string values
-            def process_string_value(value):
-                value = value.strip()
-                return value if value else None
             iDescription= process_string_value(item.get('iDescription'))
             color = process_string_value(item.get('color'))
             material = process_string_value(item.get('material'))
