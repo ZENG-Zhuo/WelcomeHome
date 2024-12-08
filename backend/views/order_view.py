@@ -147,7 +147,7 @@ def find_order_items():
     WHERE o.orderID = %s
     """
     
-    cursor.execute(query, (order_id))
+    cursor.execute(query, (order_id, ))
     items = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -183,7 +183,7 @@ def find_order_items():
 def return_supervised_order():
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT orderID,orderNotes,client,orderDate,d.userName,status,date FROM ordered o LEFT JOIN delivered d USING(orderID) WHERE o.supervisor = %s", (session['userName']))
+    cursor.execute("SELECT orderID,orderNotes,client,orderDate,d.userName,status,date FROM ordered o LEFT JOIN delivered d USING(orderID) WHERE o.supervisor = %s", (session['userName'], ))
     supervise = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -194,7 +194,7 @@ def return_supervised_order():
 def return_delivered_order():
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT  * FROM delivered WHERE userName = %s", (session['userName']))
+    cursor.execute("SELECT  * FROM delivered WHERE userName = %s", (session['userName'], ))
     deliver = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -221,7 +221,7 @@ def update_order_status():
         SET status = %s, date = %s    
         WHERE orderID = %s AND userName = %s
         """
-        cursor.execute(query, (status, date, order_id, userName))
+        cursor.execute(query, (status, date, order_id, userName, ))
         if cursor.rowcount == 0:
             return jsonify({"error": "No record found to update. Check the provided orderID and delivererName."}), 404
 

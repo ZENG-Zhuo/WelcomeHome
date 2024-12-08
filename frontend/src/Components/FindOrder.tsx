@@ -35,7 +35,14 @@ const FindOrderItems: React.FC = () => {
     try {
       const response = await axios.post(`${config.apiUrl}/find_order_items`, {
         orderID: values.orderID,
-      });
+      },
+        {
+          withCredentials: true,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+          },
+        });
       setItemLocations(response.data);
     } catch (error) {
       message.error("Error fetching items. Please check the order ID.");

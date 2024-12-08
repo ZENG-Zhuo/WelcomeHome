@@ -43,7 +43,7 @@ const App = () => {
           <Route path="/rankSystem" element={<ProtectedRoute element={<RankSystem />} />} />
           <Route path="/prepareOrder" element={<ProtectedRoute element={<OrderUpdate />} />} />
           <Route path="/userTasks" element={<ProtectedRoute element={<UserOrders />} />} />
-          <Route path="/updateOrderStatus" element={<ProtectedRoute element={<RoleRoute element={<OrderManagement />} requiredRoles={["staff","volunteer"]} />} />} />
+          <Route path="/OrderUpdate" element={<ProtectedRoute element={<RoleRoute element={<OrderManagement />} requiredRoles={["staff","volunteer"]} />} />} />
           <Route
             path="/"
             element={
