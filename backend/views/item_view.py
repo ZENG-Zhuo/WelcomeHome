@@ -48,18 +48,22 @@ def create_item():
 @login_required
 @item_bp.route('/find_item_locations', methods=['POST'])
 def find_item_locations():
-    print(session)
     # Prompt the user to send the ItemID in the JSON body
     print("Finding item location")
-    data = request.get_json()
     
-    item_id = data.get('ItemID')
+    item_id = request.get_json().get('ItemID')
     
     if not item_id:
         return jsonify({"error": "ItemID is required"}), 400
     
     connection = get_db_connection()
     cursor = connection.cursor()
+    
+    # Check if the item exists
+    cursor.execute("SELECT * FROM Item WHERE ItemID = %s", (item_id,))
+    item = cursor.fetchone()
+    if not item:
+        return jsonify({"error": "Item not exists"}), 404
 
     # Query to retrieve detailed information about pieces for the given ItemID
     cursor.execute("""
@@ -74,13 +78,8 @@ def find_item_locations():
     cursor.close()
     connection.close()
     
-    if not pieces_locations:
-        return jsonify({"message": "No pieces found for the given ItemID"}), 404
-    
     # Format the results into a more readable structure
-    locations = []
-    for loc in pieces_locations:
-        locations.append({
+    locations = [{
             "pieceNum": loc[0],
             "description": loc[1],
             "dimensions": {
@@ -91,7 +90,7 @@ def find_item_locations():
             "roomNum": loc[5],
             "shelfNum": loc[6],
             "notes": loc[7],
-        })
+        } for loc in pieces_locations]
     
-    # Return the list of locations with additional information
+    # No peices will be handled in the frontend
     return jsonify({"ItemID": item_id, "locations": locations}), 200
