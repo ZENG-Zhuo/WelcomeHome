@@ -38,8 +38,8 @@ const App = () => {
           <Route path="/shop/:orderId" element={<ProtectedRoute element={<RoleRoute element={<ShopPage />} requiredRoles={["staff"]} />} />} />
           <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
           <Route path="/rankSystem" element={<ProtectedRoute element={<RankSystem />} />} />
-          <Route path="/orderUpdate" element={<ProtectedRoute element={<OrderUpdate />} />} />
-          <Route path="/orders" element={<ProtectedRoute element={<UserOrders />} />} />
+          <Route path="/prepareOrder" element={<ProtectedRoute element={<OrderUpdate />} />} />
+          <Route path="/userTasks" element={<ProtectedRoute element={<UserOrders />} />} />
           <Route
             path="/"
             element={

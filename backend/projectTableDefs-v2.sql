@@ -15,7 +15,7 @@ CREATE TABLE Item (
     photo VARCHAR(20), -- BLOB is better here, but for simplicity, we change it to VARCHAR; For p3 implementation, we recommend you to implement as blob
     color VARCHAR(20),
     isNew BOOLEAN DEFAULT TRUE,
-    hasPieces BOOLEAN,
+    hasPieces BOOLEAN DEFAULT FALSE, -- for Piece check
     material VARCHAR(50),
     mainCategory VARCHAR(50) NOT NULL,
     subCategory VARCHAR(50) NOT NULL,
@@ -118,3 +118,34 @@ CREATE TABLE Delivered (
     FOREIGN KEY (userName) REFERENCES Person(userName),
     FOREIGN KEY (orderID) REFERENCES Ordered(orderID)
 );
+
+-- Triggers to trace the change of hasPieces in Item table
+DELIMITER //
+
+CREATE TRIGGER update_item_after_piece_insert 
+AFTER INSERT ON Piece 
+FOR EACH ROW 
+BEGIN
+    UPDATE Item 
+    SET hasPieces = TRUE 
+    WHERE ItemID = NEW.ItemID;
+END; //
+
+CREATE TRIGGER update_item_after_piece_delete 
+AFTER DELETE ON Piece 
+FOR EACH ROW 
+BEGIN
+    DECLARE remaining_pieces INT; -- number of pieces left for the item
+    
+    SELECT COUNT(*) INTO remaining_pieces 
+    FROM Piece 
+    WHERE ItemID = OLD.ItemID;
+    
+    IF remaining_pieces = 0 THEN
+        UPDATE Item 
+        SET hasPieces = FALSE 
+        WHERE ItemID = OLD.ItemID;
+    END IF;
+END; //
+
+DELIMITER ;

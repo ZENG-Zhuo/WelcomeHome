@@ -34,7 +34,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchUserData();
-  });
+  }, []);
 
   const generalFeatures: Feature[] = [
     { label: "Find Single Item", path: "/findItem" },
