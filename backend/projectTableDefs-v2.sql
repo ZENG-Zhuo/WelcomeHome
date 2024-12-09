@@ -122,9 +122,9 @@ CREATE TABLE Delivered (
     FOREIGN KEY (orderID) REFERENCES Ordered(orderID)
 );
 
--- Triggers to trace the change of hasPieces in Item table
+-- Triggers
 DELIMITER //
-
+-- Triggers to trace the change of hasPieces in Item table
 CREATE TRIGGER update_item_after_piece_insert 
 AFTER INSERT ON Piece 
 FOR EACH ROW 
@@ -172,6 +172,27 @@ BEGIN
     UPDATE Item 
     SET hasPieces = TRUE
     WHERE Item.ItemID = NEW.ItemID;
+END; //
+
+-- Triggers to check the status value in Delivered table
+CREATE TRIGGER check_status_before_insert
+BEFORE INSERT ON Delivered
+FOR EACH ROW
+BEGIN
+    IF NEW.status NOT IN ('Prepared', 'Delivered', 'Received') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid status value. Allowed values are Prepared, Delivered, Received.';
+    END IF;
+END; //
+
+CREATE TRIGGER check_status_before_update
+BEFORE UPDATE ON Delivered
+FOR EACH ROW
+BEGIN
+    IF NEW.status NOT IN ('Prepared', 'Delivered', 'Received') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid status value. Allowed values are Prepared, Delivered, Received.';
+    END IF;
 END; //
 
 DELIMITER ;

@@ -207,6 +207,7 @@ def return_delivered_order():
     return jsonify(deliver)
 
 @order_bp.route('/orderStatusUpdate', methods=['POST'])
+@login_required
 def update_order_status():
     try:
         data = request.get_json()
@@ -241,6 +242,7 @@ def update_order_status():
             connection.close()
 
 @order_bp.route('/orders/search', methods=['GET'])
+@login_required
 def search_orders():
     order_number = request.args.get('order_number')
     client_username = request.args.get('client_username')
@@ -261,9 +263,29 @@ def search_orders():
 
     return jsonify(orders)
 
+@order_bp.route('/orders/check_order_status', methods=['GET'])
+@login_required
+def check_order_status():
+    order_id = request.args.get('orderID')
+    print("OrderID: ", order_id)
+
+    if not order_id:
+        return jsonify({"error": "orderID is required."}), 400
+    
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    
+    try:
+        cursor.execute("SELECT * FROM Delivered WHERE orderID = %s", (order_id,))
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"status": "Order not delivered"}), 200
+        return jsonify({"status": "delivered"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to check order status: {str(e)}"}), 500
 
 @order_bp.route('/orders/update_location', methods=['POST'])
-@staff_required
+@login_required
 def update_item_location():
     data = request.get_json()
     order_id = data.get('orderID')
@@ -301,7 +323,7 @@ def update_item_location():
     return jsonify({"message": "Item locations updated to (-1, -1) and order marked as ready for delivery."}), 200
 
 @order_bp.route('/orders/add_delivery', methods=['POST'])
-@staff_required
+@login_required
 def add_delivery():
     data = request.get_json()
     order_id = data.get('orderID')

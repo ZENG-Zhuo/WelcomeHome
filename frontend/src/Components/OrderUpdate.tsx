@@ -36,6 +36,19 @@ const OrderUpdate: React.FC = () => {
   const updateLocation = async () => {
     setLoading(true);
     try {
+      if (!selectedOrderID) {
+        message.error("Please select an order first");
+        return;
+      } 
+      const result = await axios.get(`${config.apiUrl}/orders/check_order_status?orderID=${selectedOrderID}`);
+      if (result.data.status==="delivered") {
+        notification.error({
+          message: "Duplicate request",
+          description: "Order has already been prepared",
+        });
+        return;
+      }
+
       await axios.post(`${config.apiUrl}/orders/update_location`, {
         orderID: selectedOrderID, // Use the selected order ID
       });
