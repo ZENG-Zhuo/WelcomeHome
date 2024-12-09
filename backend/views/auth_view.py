@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Blueprint, request, jsonify, session, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, session
 import mysql.connector
 from utils import get_db_connection, process_string_value
 
@@ -142,10 +142,6 @@ def login():
         # Store roles in session
         session['roles'] = [role[0] for role in roles]  # Assuming roleID is the first column
 
-        # print(session['userName'])
-        # print('userName' in session)
-        # print(session['roles'])
-        print("login:",session)
         session.modified = True
         return jsonify({"message": "Login success!"}), 200
     else:

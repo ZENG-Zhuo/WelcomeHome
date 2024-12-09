@@ -61,7 +61,6 @@ def create_donation():
 @staff_required
 def accept_donation():
     data = request.get_json()
-    print(data)
     user_name = data.get('userName')
     items = data.get('items')  # Expecting a list of items, each containing multiple pieces
 
@@ -153,13 +152,16 @@ def check_donor():
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    cursor.execute("""
-        SELECT * FROM Act WHERE userName = %s AND roleID = 'donor'
-    """, (user_name,))
-    donor_check = cursor.fetchone()
-
-    cursor.close()
-    connection.close()
+    try:
+        cursor.execute("""
+            SELECT * FROM Act WHERE userName = %s AND roleID = 'donor'
+        """, (user_name,))
+        donor_check = cursor.fetchone()
+    except Exception as e:
+        return jsonify({"error": f"Error checking donor: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
 
     if donor_check:
         return jsonify({"isDonor": True}), 200

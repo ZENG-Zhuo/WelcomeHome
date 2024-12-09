@@ -26,7 +26,6 @@ def get_items():
             """
             cursor.execute(sql, params)
             items = cursor.fetchall()
-        print(items)
         return jsonify(items), 200
 
     except Exception as e:
@@ -49,7 +48,7 @@ def create_item():
 @item_bp.route('/find_item_locations', methods=['POST'])
 def find_item_locations():
     # Prompt the user to send the ItemID in the JSON body
-    print("Finding item location")
+    # print("Finding item location")
     
     item_id = request.get_json().get('ItemID')
     

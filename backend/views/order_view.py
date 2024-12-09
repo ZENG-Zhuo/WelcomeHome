@@ -7,11 +7,9 @@ from .auth_view import staff_required, login_required
 
 order_bp = Blueprint('order_bp', __name__)
 
-@login_required
 @order_bp.route('/orderInfo', methods=['POST']) 
 def order_info():
     orderid = request.json.get('orderID')
-    print("OrderID: ", orderid)
     
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -21,7 +19,7 @@ def order_info():
         if not order:
             return jsonify({"error": "Order not found"}), 404
                 
-        cursor.execute("SELECT * FROM ItemIn WHERE orderID = %s", (orderid,))
+        cursor.execute("SELECT EXISTS(SELECT * FROM ItemIn WHERE orderID = %s)", (orderid,))
         order['submit'] = True if cursor.fetchone() else False
         
         order['orderDate'] = order['orderDate'].strftime("%Y-%m-%d")
@@ -94,7 +92,7 @@ def add_items_to_order():
             # EXIST for efficiency
             cursor.execute("SELECT EXISTS(SELECT * FROM ItemIn WHERE itemID = %s)", (item_id,))
             data = cursor.fetchone()
-            print("Data: ", data)
+
             if data[0] == 1: # exists
                 unavailable_items.append(item_id)
         if len(unavailable_items) > 0:
@@ -127,36 +125,38 @@ def find_order_items():
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    
-    # Check if the order exists
-    cursor.execute("SELECT * FROM Ordered WHERE orderID = %s", (order_id,))
-    order = cursor.fetchone()
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
+    try:
+        # Check if the order exists
+        cursor.execute("SELECT * FROM Ordered WHERE orderID = %s", (order_id,))
+        order = cursor.fetchone()
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
 
-    # Query to find items in the specified order with additional piece information
-    query = """
-    SELECT 
-        i.ItemID, 
-        i.iDescription, 
-        p.pieceNum, 
-        p.pDescription, 
-        p.length, 
-        p.width, 
-        p.height, 
-        p.roomNum, 
-        p.shelfNum
-    FROM Item i
-    NATURAL JOIN ItemIn ii
-    NATURAL JOIN Ordered o
-    NATURAL JOIN Piece p
-    WHERE o.orderID = %s
-    """
-    
-    cursor.execute(query, (order_id, ))
-    items = cursor.fetchall()
-    cursor.close()
-    connection.close()
+        # Query to find items in the specified order with additional piece information
+        query = """
+        SELECT 
+            i.ItemID, 
+            i.iDescription, 
+            p.pieceNum, 
+            p.pDescription, 
+            p.length, 
+            p.width, 
+            p.height, 
+            p.roomNum, 
+            p.shelfNum
+        FROM Item i
+        NATURAL JOIN ItemIn ii
+        NATURAL JOIN Ordered o
+        NATURAL JOIN Piece p
+        WHERE o.orderID = %s
+        """
+        cursor.execute(query, (order_id, ))
+        items = cursor.fetchall()
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 400
+    finally:
+        cursor.close()
+        connection.close()
 
     if not items:
         return jsonify({"message": "No items found for the given orderID"}), 404
@@ -264,8 +264,6 @@ def search_orders():
 @order_bp.route('/orders/check_order_status', methods=['GET'])
 def check_order_status():
     order_id = request.args.get('orderID')
-    print("OrderID: ", order_id)
-
     if not order_id:
         return jsonify({"error": "orderID is required."}), 400
     
@@ -273,13 +271,17 @@ def check_order_status():
     cursor = connection.cursor()
     
     try:
-        cursor.execute("SELECT * FROM Delivered WHERE orderID = %s", (order_id,))
+        # Use EXISTS for efficiency
+        cursor.execute("SELECT EXISTS(SELECT 1 FROM Delivered WHERE orderID = %s)", (order_id,))
         result = cursor.fetchone()
         if not result:
             return jsonify({"status": "Order not delivered"}), 200
         return jsonify({"status": "delivered"}), 200
     except Exception as e:
         return jsonify({"error": f"Failed to check order status: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
 
 @order_bp.route('/orders/update_location', methods=['POST'])
 def update_item_location():
