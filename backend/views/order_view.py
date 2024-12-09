@@ -127,6 +127,12 @@ def find_order_items():
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
+    
+    # Check if the order exists
+    cursor.execute("SELECT * FROM Ordered WHERE orderID = %s", (order_id,))
+    order = cursor.fetchone()
+    if not order:
+        return jsonify({"error": "Order not found"}), 404
 
     # Query to find items in the specified order with additional piece information
     query = """
@@ -294,7 +300,47 @@ def update_item_location():
 
     return jsonify({"message": "Item locations updated to (-1, -1) and order marked as ready for delivery."}), 200
 
+@order_bp.route('/orders/add_delivery', methods=['POST'])
+@staff_required
+def add_delivery():
+    data = request.get_json()
+    order_id = data.get('orderID')
+    
+    if not order_id:
+        return jsonify({"error": "orderID is required."}), 400
+    
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            SELECT userName 
+            FROM Act 
+            WHERE roleID IN ('staff', 'volunteer')
+            ORDER BY RAND() -- mysql function to randomize the selection
+            LIMIT 1
+        """)
+        result = cursor.fetchone()
+        
+        if not result:
+            return jsonify({"error": "No available staff or volunteers found."}), 400
 
+        selected_person = result[0] # result is a tuple
+        
+        cursor.execute("""
+            INSERT INTO Delivered (userName, orderID, status, date) 
+            VALUES (%s, %s, %s, %s)
+        """, (selected_person, order_id, 'Prepared', date.today()))
+
+        connection.commit()
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": f"Failed to add delivery: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return jsonify({"status": "success", "delivery_person": selected_person}), 200
+        
 @order_bp.route('/user/orders', methods=['GET'])
 @login_required
 def get_user_orders():

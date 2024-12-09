@@ -23,6 +23,9 @@ CREATE TABLE Item (
     FOREIGN KEY (mainCategory, subCategory) REFERENCES Category(mainCategory, subCategory)
 );
 
+-- Index for Item table to speed up the search
+CREATE INDEX idx_item_category ON Item (mainCategory, subCategory);
+
 
 CREATE TABLE Person (
     userName VARCHAR(50) NOT NULL,
@@ -60,7 +63,7 @@ CREATE TABLE Act (
     roleID VARCHAR(20) NOT NULL,
     PRIMARY KEY (userName, roleID),
     FOREIGN KEY (userName) REFERENCES Person(userName),
-    FOREIGN KEY (roleID) REFERENCES Role(roleID)
+    FOREIGN KEY (roleID) REFERENCES Role(roleID) ON DELETE CASCADE -- if a role is deleted, the act should be deleted
 );
 
 CREATE TABLE Location (
@@ -105,7 +108,7 @@ CREATE TABLE ItemIn (
     found BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (ItemID, orderID),
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
-    FOREIGN KEY (orderID) REFERENCES Ordered(orderID)
+    FOREIGN KEY (orderID) REFERENCES Ordered(orderID) ON DELETE CASCADE -- if an order is deleted, the itemIn should be deleted
 );
 
 
@@ -152,17 +155,19 @@ CREATE TRIGGER update_item_after_piece_update
 AFTER UPDATE ON Piece
 FOR EACH ROW
 BEGIN
-    -- update hasPieces in two items
-    UPDATE Item 
-    SET hasPieces = 
-        (SELECT 
-            CASE 
-                WHEN COUNT(*) > 0 THEN TRUE 
-                ELSE FALSE 
-            END 
-         FROM Piece 
-         WHERE Piece.ItemID = OLD.ItemID)
-    WHERE Item.ItemID = OLD.ItemID;
+    -- if the itemID is changed, update for both the old and new item
+    IF OLD.ItemID <> NEW.ItemID THEN
+        UPDATE Item 
+        SET hasPieces = 
+            (SELECT 
+                CASE 
+                    WHEN COUNT(*) > 0 THEN TRUE 
+                    ELSE FALSE 
+                END 
+             FROM Piece 
+             WHERE Piece.ItemID = OLD.ItemID)
+        WHERE Item.ItemID = OLD.ItemID;
+    END IF;
 
     UPDATE Item 
     SET hasPieces = TRUE

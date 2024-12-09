@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, Input, Button, List, Typography, message } from "antd";
+import { Form, Input, Button, List, Typography, message, notification } from "antd";
 import axios from "axios";
 import config from "../config";
 
@@ -44,8 +44,11 @@ const FindOrderItems: React.FC = () => {
           },
         });
       setItemLocations(response.data);
-    } catch (error) {
-      message.error("Error fetching items. Please check the order ID.");
+    } catch (error: any) {
+      notification.error({ 
+        message: "Failed to find items",
+        description: error.response?.data?.error|| error.response.data.message || error.message
+      });
     }
   };
 

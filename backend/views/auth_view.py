@@ -166,5 +166,5 @@ def logout():
 def protected_resource(): # test protected
     print(session)
     if 'userName' in session:
-        return f"Welcome to the protected resource, {session['fname']} {session['lname']}!"
+        return f"Welcome to the protected resource, {session['userName']}!"
     return jsonify({"error": "Please login first"}), 401

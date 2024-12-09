@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Table, Select, message } from "antd";
+import { Form, Input, Button, Table, Select, message, notification } from "antd";
 import axios from "axios";
 import config from "../config";
 
@@ -40,9 +40,20 @@ const OrderUpdate: React.FC = () => {
         orderID: selectedOrderID, // Use the selected order ID
       });
       message.success("Items updated successfully!");
-    } catch (error) {
-      console.log(error)
-      message.error("Failed to update item locations.");
+      setSelectedOrderID(undefined); // Clear the selected order ID
+
+      const response = await axios.post(`${config.apiUrl}/orders/add_delivery`, {
+        orderID: selectedOrderID,
+      });
+      notification.success({
+        message: "Ready for delivery",
+        description: `Assign to: ${response.data.delivery_person}`,
+      });
+    } catch (error: any) {
+      notification.error({
+        message: "Failed to prepare order",
+        description: error.response?.data?.error || error.response.data.message || error.message,
+      });
     } finally {
       setLoading(false);
     }
